@@ -1,0 +1,392 @@
+---
+title: "Assignment_wk7_Saripalli"
+author: "Balaram"
+date: "2025-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setting the working directory
+```{r working direct}
+setwd("F:/Balaram/Statcourse")
+```
+
+## Assignment Week 7
+1. Perform a logistic regression on the marketing.csv dataset 
+2. Predict customer’s response on marketing campaign (i.e. 1 if customer accepted the offer in the last campaign, 0 otherwise).
+3. Interpret the model and comment on its accuracy
+4. Provide a summary of your findings. What are the implications of your analysis for company XYZ? (or if you choose a different data set include appropriate response)
+
+Post Rmd file and a knitted html file to the assignment dropbox.
+
+## Marketing Data Analysis
+
+This analysis aims to predict customer response to a marketing campaign using logistic regression. We'll use the provided marketing dataset to build a model that predicts whether a customer accepted the offer in the last campaign (1) or not (0).
+
+## Data Preprocessing and Exploration
+
+First, let's load the necessary libraries and import the data:
+```{r import libraries}
+library(tidyverse)
+library(caret)
+library(car)
+library(MASS)
+library(pROC)
+```
+
+Read the data file
+```{r read data}
+data <- read.csv("marketing.csv")
+```
+
+Display the first few rows and structure of the data
+```{r look data}
+head(data)
+str(data)
+```
+The given data has 2240 obs and 19 variables
+ 
+# Data Processing
+```{r preprocessing}
+
+# Convert Dt_Customer to year
+data$Year_Customer <- as.numeric(format(as.Date(data$Dt_Customer, "%m/%d/%Y"), "%Y"))
+
+# Calculate age at the time of joining
+data$Age <- data$Year_Customer - data$Year_Birth
+
+# Convert categorical variables to factors
+data$Education <- as.factor(data$Education)
+data$Marital_Status <- as.factor(data$Marital_Status)
+data$Response <- as.factor(data$Response)
+data$Country <- as.factor(data$Country)
+
+
+# Remove unnecessary columns
+data <- data %>% dplyr::select(-any_of(c("ID", "Dt_Customer", "Year_Customer", "Year_Birth")))
+
+
+# Handle missing values if any
+data <- na.omit(data)
+
+# Convert Income to numeric (remove $ and commas)
+data$Income <- as.numeric(gsub("[$,]", "", data$Income))
+
+# Display the first few rows and structure of the modified data
+head(data)
+str(data)
+
+# Display summary statistics
+summary(data)
+
+```
+## 1. Perform a logistic regression on the marketing.csv dataset
+
+```{r logistic regression}
+# Split the data into training and testing sets
+set.seed(123)
+train_index <- createDataPartition(data$Response, p = 0.7, list = FALSE)
+train_data <- data[train_index, ]
+test_data <- data[-train_index, ]
+
+# Fit the logistic regression model with the new Age feature
+model <- glm(Response ~ ., data = train_data, family = binomial)
+
+# Display model summary
+summary(model)
+```
+# Interpretation:
+
+we have created a variable age using the year of birth and year of joing and removed those features for analysis (As this might give idea on which age group people are purchasing etc.)
+
+1. **Model Fit:** The model's AIC is 1134.4, indicating a reasonable fit. A lower AIC suggests a better model, balancing goodness of fit and model complexity.
+
+2. The residual deviance (1070.4) is lower than the null deviance (1316.6), suggesting the model explains some of the variation in the response variable.
+
+# **Significant Predictors**: 
+Amount spent on wines, amount spent on meat products, number of store purchases, age and number of webpurchases have p<0.05 and are highly significant predictors. 
+
+We have consider p < 0.001 as highly significant, p < 0.01 as significant and p< 0.05 as marginally significant
+
+**Highly significant**
+
+1. MntWines (β = 1.950e-03, p < 0.001): Higher spending on wines is strongly associated with a higher likelihood of response.
+
+2. MntMeatProducts (β = 2.457e-03, p < 0.001): Increased spending on meat products significantly increases the odds of response.
+
+3. NumStorePurchases (β = -1.949e-01, p < 0.001): More store purchases are associated with a lower probability of response.
+
+**Significant**
+
+1. Age (β = -2.099e-02, p < 0.01): Older customers are slightly less likely to respond to the campaign.
+
+2. NumWebPurchases (β = 1.070e-01, p < 0.01): More web purchases are associated with a higher likelihood of response.
+
+**Marginally Significant**
+
+1. EducationPhD (β = 7.250e-01, p < 0.05): Customers with a PhD are more likely to respond compared to the baseline education level.
+
+**Other Observations**
+
+1. Income shows a marginally negative effect (β = -1.285e-05, p < 0.1), suggesting higher income might slightly decrease response likelihood.
+
+2. Kidhome has a positive effect (β = 3.971e-01, p < 0.1), indicating having children at home might increase response probability.
+
+3. Most marital status categories and country variables are not statistically significant.
+
+**Implications**
+
+1. Focus on wine and meat product promotions to increase campaign response.
+
+2. Optimize web purchasing experiences, as they are positively associated with response.
+
+3. Tailor strategies for older customers who may be less responsive.
+
+4. Consider specialized approaches for highly educated (PhD) customers.
+
+5. Re-evaluate in-store purchase strategies, as they negatively correlate with campaign response.
+
+This model provides valuable insights for targeting and personalizing marketing efforts, though further analysis may be needed to understand some of the unexpected relationships (e.g., negative effect of store purchases).
+
+
+# 2. Predict customer’s response on marketing campaign (i.e. 1 if customer accepted the offer in the last campaign, 0 otherwise).
+
+```{r prediction}
+# Make predictions on the test set
+predictions <- predict(model, newdata = test_data, type = "response")
+
+# Convert probabilities to binary predictions
+predicted_classes <- ifelse(predictions > 0.5, 1, 0)
+
+# Create confusion matrix
+conf_matrix <- confusionMatrix(as.factor(predicted_classes), test_data$Response)
+print(conf_matrix)
+
+# Calculate ROC curve and AUC
+roc_curve <- roc(test_data$Response, predictions)
+auc_value <- auc(roc_curve)
+
+# Plot ROC curve
+plot(roc_curve, main = "ROC Curve", col = "blue")
+text(0.8, 0.2, paste("AUC =", round(auc_value, 3)), col = "red")
+
+# Print additional performance metrics
+cat("\nAccuracy:", conf_matrix$overall['Accuracy'])
+cat("\nSensitivity:", conf_matrix$byClass['Sensitivity'])
+cat("\nSpecificity:", conf_matrix$byClass['Specificity'])
+cat("\nAUC:", round(auc_value, 3))
+```
+1. **Confusion Matrix:**
+True Negatives (547): The model correctly predicted 547 customers who did not respond to the campaign.
+
+True Positives (18): The model correctly predicted 18 customers who responded to the campaign.
+
+False Negatives (81): The model incorrectly predicted 81 customers as non-responders when they actually responded.
+
+False Positives (17): The model incorrectly predicted 17 customers as responders when they did not respond.
+
+2. **Accuracy:**
+The overall accuracy of the model is 85.22%, meaning the model correctly predicted 85.22% of the test cases. While this is a high value, it may be misleading due to class imbalance (the majority class is "non-responders").
+
+3. **Sensitivity (Recall for Class 0):**
+Sensitivity is 96.99%, indicating that the model is very good at identifying non-responders (class 0). This is expected since most of the data belongs to this class.
+
+4. **Specificity (Recall for Class 1):**
+Specificity is 18.18%, showing that the model struggles to identify responders (class 1). This indicates poor performance in detecting the minority class.
+
+5. **AUC (Area Under the Curve):**
+The AUC is 0.727, which indicates moderate discriminative ability of the model. An AUC closer to 1 would signify excellent performance, while an AUC of 0.5 would indicate no discriminative power.
+
+6. **Class Imbalance:**
+The prevalence of class 0 ("non-responders") is much higher than class 1 ("responders"). This imbalance skews metrics like accuracy, making it less reliable for assessing model performance.
+
+7. **Kappa Statistic:**
+The Kappa value is 0.2068, which indicates slight agreement between the predicted and actual classes beyond chance.
+
+
+# 4. Provide a summary of your findings. What are the implications of your analysis for company XYZ? (or if you choose a different data set include appropriate response)
+
+**Model Insights:** The logistic regression model performs well in predicting non-responders but struggles with identifying responders due to class imbalance. We can use some imbalance data handling techniques like over sampling, under sampling or SMOTE technique to handle this problem. 
+
+Significant predictors from earlier analysis, such as spending on wine and meat products, age, and web purchases, likely contribute to prediction accuracy for certain customer segments.
+
+**Performance Metrics:**
+
+1. While accuracy is high at 85.22%, low specificity (18.18%) and moderate AUC (0.727) suggest that the model is not effective at identifying customers who are likely to respond positively to campaigns.
+
+2. Sensitivity for non-responders (96.99%) indicates that most predictions are skewed toward the majority class.
+
+
+
+# As the model performance is not good lets use setep wise AIC for selecting relevant features and improvee the model. 
+```{r step model}
+
+model_step <- glm(Response ~ ., data = train_data, family = binomial) %>%
+  stepAIC(trace = FALSE)
+
+# Display the final model
+summary(model_step)
+
+# Calculate VIF for the final model
+vif_values <- vif(model_step)
+print(vif_values)
+
+```
+```{r Step_model pred}
+# Make predictions on the test set
+predictions <- predict(model_step, newdata = test_data, type = "response")
+
+# Determine the optimal threshold using the ROC curve
+roc_curve <- roc(test_data$Response, predictions)
+plot(roc_curve, main = "ROC Curve", col = "blue")
+optimal_threshold <- roc_curve$thresholds[which.max(roc_curve$sensitivities + roc_curve$specificities)]
+cat("Optimal Threshold:", optimal_threshold)
+
+# Convert probabilities to binary predictions using the optimal threshold
+predicted_classes <- ifelse(predictions > optimal_threshold, 1, 0)
+
+# Create a confusion matrix
+conf_matrix <- confusionMatrix(as.factor(predicted_classes), test_data$Response)
+print(conf_matrix)
+
+# Calculate additional performance metrics
+cat("\nAccuracy:", conf_matrix$overall['Accuracy'])
+cat("\nSensitivity:", conf_matrix$byClass['Sensitivity'])
+cat("\nSpecificity:", conf_matrix$byClass['Specificity'])
+cat("\nAUC:", round(auc(roc_curve), 3))
+```
+# 3. Interpret the model and comment on its accuracy of updated model
+
+The updated model incorporates stepwise feature selection using stepAIC() and evaluates multicollinearity using VIF analysis. While the model has improved in terms of simplicity and interpretability, the AUC (Area Under the Curve) is slightly lower compared to the original model, indicating reduced discriminative ability. Below is a detailed interpretation of the updated model's results:
+
+# **Model Fit and Predictors**
+
+**Coefficients and Significance:**
+
+**Significant predictors include:**
+
+ 1. MntWines (p < 0.001): Higher spending on wines strongly correlates with a higher likelihood of response.
+
+2. MntMeatProducts (p < 0.001): Increased spending on meat products significantly increases the odds of response.
+
+3. NumWebPurchases (p < 0.001): More web purchases are positively associated with campaign response.
+
+4. NumStorePurchases (p < 0.001): More store purchases are negatively correlated with response.
+
+5. Age (p < 0.01): Older customers are slightly less likely to respond.
+
+**Marginally significant predictors:**
+
+1. Income (p < 0.1): Higher income may slightly decrease the likelihood of response.
+
+2. Kidhome (p < 0.1): Having children at home might increase response probability.
+
+
+#**Multicollinearity (VIF Analysis):** 
+None of the VIF values exceed the threshold of 5, indicating that multicollinearity is not a major concern in this model. The highest VIF is for Income (3.729), which is still within acceptable limits.
+
+# Model performace Metrics:
+
+Null Deviance: 1316.6
+
+Residual Deviance: 1085.4
+
+AIC: 1123.4
+
+The reduction in deviance and AIC suggests that the model explains some variability in the response variable while maintaining simplicity.
+
+**Performance Metrics**
+- True Negatives: 333
+- True Positives: 73
+- False Negatives: 26
+- False Positives: 231
+
+2. **Accuracy:** 
+- The accuracy of the updated model is **61.24%**, which is lower than the original model's accuracy (~85%). This drop could be attributed to balancing sensitivity and specificity using the ROC curve's optimal threshold.
+
+3. **Sensitivity:** 
+- Sensitivity is **59.04%**, indicating that the model correctly identifies ~59% of responders.
+
+4. **Specificity:** 
+- Specificity is **73.74%**, meaning the model correctly identifies ~74% of non-responders.
+
+5. **AUC (Area Under the Curve):**
+- The AUC is **0.705**, which indicates moderate discriminative ability but is slightly lower than the original model's AUC (~0.727).
+
+---
+
+### **Comparison with Original Model**
+
+| Metric               | Original Model | Updated Model |
+|----------------------|----------------|---------------|
+| Accuracy             | ~85%           | ~61%          |
+| Sensitivity          | ~96%           | ~59%          |
+| Specificity          | ~18%           | ~74%          |
+| AUC                  | ~0.727         | ~0.705        |
+| Null Deviance        | ~1316          | ~1316         |
+| Residual Deviance    | ~1070          | ~1085         |
+| AIC                  | ~1134          | ~1123         |
+
+#### Observations:
+1. The updated model has better specificity but lower sensitivity compared to the original model, suggesting improved performance in identifying non-responders while struggling to identify responders.
+
+2. The AUC has decreased slightly, indicating reduced overall discriminative ability.
+
+3. The updated model uses fewer predictors, making it simpler and more interpretable, but this may have sacrificed some predictive power.
+
+
+**Summary of changes mades**
+- Stepwise feature selection (`stepAIC`) was performed to remove unnecessary variables, improving interpretability.
+
+- VIF analysis confirmed that multicollinearity was not a major issue in the updated model.
+
+- Variables with high p-values were removed during stepwise selection, leaving only significant predictors in the final model.
+
+- An optimal threshold was determined from the ROC curve to balance sensitivity and specificity.
+
+- Unnecessary variables were removed using `stepAIC`, resulting in a lower AIC value (1123 vs. 1134) and improved specificity.
+
+### Implications for Company XYZ
+
+1. **Targeted Marketing Strategies:**
+- Focus marketing efforts on customers who spend more on wines and meat products, as these are significant predictors of campaign response.
+- Optimize web purchasing experiences to boost engagement.
+
+2. **Addressing Class Imbalance:**
+- The low sensitivity suggests that responders are underrepresented in predictions due to class imbalance.
+- Techniques like oversampling, undersampling, or SMOTE should be explored to improve sensitivity.
+
+3. **Simplified Model for Actionable Insights:**
+- The updated model provides clearer insights into key predictors while maintaining simplicity.
+- Use these insights to tailor campaigns for specific customer segments based on age, spending habits, and family structure.
+
+4. **Future Improvements:**
+- Experiment with alternative algorithms like random forests or gradient boosting for better performance.
+- Incorporate external data sources or additional features to enhance predictive power.
+
+
+**Recommendations:**
+
+1. Improve model performance by experimenting with other algorithms or by handling imbalanced datasets.
+
+2. Incorporate additional features or external data sources that might better capture customer intent or likelihood to respond.
+
+3. Use targeted marketing strategies based on insights from significant predictors like product spending habits and channel preferences.
+
+
+### Conclusion
+
+While the updated model improves interpretability and addresses multicollinearity concerns, its performance metrics (e.g., AUC) are slightly worse than those of the original model due to reduced sensitivity for responders. To achieve better results, addressing class imbalance should be prioritized in future iterations of modeling efforts for Company XYZ's marketing campaigns.
+
+
+
+
+
+
+
+
+
+

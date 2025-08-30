@@ -1,0 +1,307 @@
+---
+title: "Assignment_Wk4_Saripalli"
+author: "Balaram"
+date: "2025-02-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment Week 4
+
+# Question
+Using the marketing data set:
+
+1. Write a null hypothesis and alternative hypothesis if two distributions have the same mean. (Remember we ultimately want to know if the marketing campaign was successful.)
+
+2. Be sure to deal with outliers and impute missing data (if appropriate) and justify your decision.
+
+3. Compute a 95 percent confidence interval for the difference in means between the distribution between your two hypothesis variables.
+
+4. Can you reject your null hypothesis?
+
+5. Write a summary of your results.
+
+## Solution
+
+# Marketing data analysis
+This analysis aims to evaluate the success of a marketing campaign using the provided marketing dataset. We will compare the means of two distributions to determine if there is a statistically significant difference, which could indicate the campaign's effectiveness.
+
+# Setting the working directory
+```{r working direct}
+setwd("F:/Balaram/Statcourse")
+```
+
+# Load all the required libraries
+```{r load lib}
+library(tidyverse)
+library(data.table)
+library(stats)
+```
+
+# Loading the data set and cleaning
+```{r data}
+data <- read_csv("marketing.csv", show_col_types = FALSE)
+# convert the data in to table
+data <- as.data.table(data)
+#Cleaning 1: Convert column names to lower case
+names(data) <- tolower(names(data))
+# Clean column names:replace spaces with underscores
+names(data) <- str_replace_all(names(data), " ", "_")
+```
+
+# Looking at the data 
+```{r basic look data}
+#Print the first few rows and data structure
+head(data)
+# Structure of the data
+str(data)
+```
+Thus we have 19 attributes, the meaning of each attributes were discussed in previous assignments. It is observed few attributes are categorical i.e., charactes and few attributes are numerical attributes. 
+
+# Checking the missing values 
+```{r missing values}
+# Check missing values
+missing_values <- data[, lapply(.SD, function(x) sum(is.na(x)))]
+print(missing_values)
+```
+We have '24' missing values in the income column and remaining attributes doesnt have any missing values. 
+
+I am choosing to impute the data in the `income` column with the median, as this avoids the influence of outliers.
+
+```{r impute median}
+library(readr)
+# Parse 'Income' to remove '$' and convert to numeric
+data[, income := parse_number(income)]
+
+# Calculate the median of the 'Income' column (excluding NA values)
+median_income <- median(data$income, na.rm = TRUE)
+
+# Impute missing values in the 'Income' column with the median
+data[is.na(income), income := median_income]
+
+# Verify imputation by counting remaining NA values in the 'Income' column
+sum(is.na(data$income))
+```
+Since the number of missing values in the income column is relatively small, imputing them with the median is a reasonable approach.  This prevents us from losing potentially valuable information from other columns in those rows.  More sophisticated methods could be considered if the missing data pattern suggests a more complex relationship.
+
+## Identifying Outliers
+Otliers can skew our analysis and lead to incorrect conclusions. Let's identify and address them by visualizing the data using boxplots.
+
+```{r box plots}
+boxplot(data$year_birth, main = "Boxplot of Year of Birth", ylab = "Year of Birth")
+boxplot(data$income, main = "Boxplot of Income", ylab = "Income")
+boxplot(data$mntwines, main = "Boxplot of Amount Spent on Wines", ylab = "Amount Spent on Wines")
+boxplot(data$mntfruits, main = "Boxplot of Amount Spent on Fruits", ylab = "Amount Spent on Fruits")
+boxplot(data$mntmeatproducts, main = "Boxplot of Amount Spent on Meat Products", ylab = "Amount Spent on Meat Products")
+boxplot(data$mntfishproducts, main = "Boxplot of Amount Spent on Fish Products", ylab = "Amount Spent on Fish Products")
+boxplot(data$mntsweetproducts, main = "Boxplot of Amount Spent on Sweet Products", ylab = "Amount Spent on Sweet Products")
+boxplot(data$mntgoldprods, main = "Boxplot of Amount Spent on Gold Products", ylab = "Amount Spent on Gold Products")
+```
+Based on the boxplots, outliers are present in several attributes. 
+
+Let's address the outliers in 'income' and 'mntwines' using the IQR method. 
+
+We'll cap the 'year_birth' outliers instead of removing them as these might represent valid older customers.
+
+# Handling outliers for income
+ we use IQR method for handling outliers here
+ 
+```{r income outlier}
+Q_income <- quantile(data$income, probs=c(.25, .75), na.rm = TRUE)
+iqr_income <- IQR(data$income, na.rm = TRUE)
+upper_bound_income <- Q_income[2] + 1.5*iqr_income
+lower_bound_income <- Q_income[1] - 1.5*iqr_income
+data <- data[income >= lower_bound_income & income <= upper_bound_income]
+# Basiaclly we removed the datapoints that are beyond the lower and upper bounds
+```
+
+# Handle outliers in mntwines
+
+```{r mntwines outlier}
+Q_wines <- quantile(data$mntwines, probs=c(.25, .75), na.rm = TRUE)
+iqr_wines <- IQR(data$mntwines, na.rm = TRUE)
+upper_bound_wines <- Q_wines[2] + 1.5*iqr_wines
+lower_bound_wines <- Q_wines[1] - 1.5*iqr_wines
+data <- data[mntwines >= lower_bound_wines & mntwines <= upper_bound_wines]
+```
+# Handle outliers for mntfruits
+```{r mntfruits outlier}
+Q_fruits <- quantile(data$mntfruits, probs=c(.25, .75), na.rm = TRUE)
+iqr_fruits <- IQR(data$mntfruits, na.rm = TRUE)
+upper_bound_fruits <- Q_fruits[2] + 1.5*iqr_fruits
+lower_bound_fruits <- Q_fruits[1] - 1.5*iqr_fruits
+data <- data[mntfruits >= lower_bound_fruits & mntfruits <= upper_bound_fruits]
+```
+
+# Cap outliers in year_birth
+
+```{r year_birth outliers}
+upper_bound_year <- 2022 - 18 # Assuming minimum age of 18
+lower_bound_year <- 2022 - 100 # Assuming maximum age of 100
+data[year_birth > upper_bound_year, year_birth := upper_bound_year]
+data[year_birth < lower_bound_year, year_birth := lower_bound_year]
+```
+
+The interquartile range (IQR) method is used to remove outliers from the income and mntwines variables. Values falling below the lower bound or above the upper bound are considered outliers and removed. 
+
+Outliers in 'year_birth' are capped to reasonable age boundaries.We assumed our customers age group will be from 18-100 from the current year (considered highest value in the incident year) This helps to ensure that extreme values do not disproportionately influence statistical measures such as the mean and standard deviation.
+
+# Create boxplots for relevant attributes after outlier handling
+```{r box after outlier}
+boxplot(data$year_birth, main = "Boxplot of Year of Birth (Outliers Handled)", ylab = "Year of Birth")
+boxplot(data$income, main = "Boxplot of Income (Outliers Handled)", ylab = "Income")
+boxplot(data$mntwines, main = "Boxplot of Amount Spent on Wines (Outliers Handled)", ylab = "Amount Spent on Wines")
+```
+The boxplots above will help to verify that the outlier handling was effective.  Visually inspect them to confirm that the extreme values have been removed or capped.
+
+Clearly the outliers are reduced in all the three cases. Income attribute eliminated outliers completely where as we can see very few outliers in case of year of birth and amount spent on wines
+
+## Hypothesis testing 
+
+'response' column is the attribute that tells that weather the customer purchased based on marketing campaign or not. 
+
+So we need to formulate the hypothesis based on the response variable
+Now, let's formulate our hypotheses and conduct the analysis, focusing on the 'response' variable.
+
+### Hypothesis Formulation
+
+To assess the success of the marketing campaign, we can directly analyze the 'response' variable, which indicates whether a customer accepted the offer in the last campaign (1 for yes, 0 for no).
+
+We'll examine if the mean amount spent on wine (mntwines) is different for customers who responded positively versus those who did not.
+
+*   **Null Hypothesis (H0):** There is no significant difference in the mean amount spent on wine (mntwines) between customers who responded to the last campaign and those who did not.
+*   **Alternative Hypothesis (H1):** There is a significant difference in the mean amount spent on wine (mntwines) between customers who responded to the last campaign and those who did not.
+
+## T-Tests
+
+Perform t-tests to compare means between different groups of customers.
+
+```{r ttest mntwines}
+# Ensure response variable is numeric
+data[, response := as.numeric(response)]
+#Perform t-test
+t_test_wines_response <- t.test(mntwines ~ as.factor(response), data = data)
+print(t_test_wines_response)
+
+```
+
+### T-Test: Response vs. Income
+
+Now We'll examine if the income is different for customers who responded positively versus those who did not.
+
+
+*   **Null Hypothesis (H0):** There is no significant difference in the mean income between customers who responded to the last campaign and those who did not.
+*   **Alternative Hypothesis (H1):** There is a significant difference in the mean income between customers who responded to the last campaign and those who did not.
+
+```{r ttest income}
+#Perform t-test
+t_test_income_response <- t.test(income ~ as.factor(response), data = data)
+print(t_test_income_response)
+```
+### Interpretation of T-Test Results
+
+For each t-test:
+
+*   Examine the p-value. If the p-value is less than 0.05, we reject the null hypothesis and conclude that there is a statistically significant difference in the means between the two groups.
+*   Examine the confidence interval for the difference in means. If the confidence interval does not include zero, this also supports rejecting the null hypothesis.
+
+## Conclusion
+
+This analysis used t-tests to evaluate differences in means between customer groups based on the 'response' variable. The t-test results provide insights into whether the marketing campaign had a statistically significant impact on customer spending and income. Based on the p-values, we can determine whether to reject the null hypotheses and conclude that significant differences exist.
+
+Based on analysis both the income and mntwines has significant differences with response., i.e., marketing has a positive impact in bothe the incomes and mnt wines. Similarly we can evaluate the effect of marketing on other attributes. by perfoming the ttests. 
+
+
+# Marketing analysis as creating hypothesis for each attribute individually is tedious, we can conduct test for all the attributes wrt response.
+```{r data prep}
+# Ensure response is numeric
+data[, response := as.numeric(response)]
+# Convert relevant variables to numeric, coercing any non-numeric entries to NA
+cols_to_convert <- c("mntwines", "mntfruits", "mntmeatproducts", "mntfishproducts",
+"mntsweetproducts", "mntgoldprods", "numdealspurchases",
+"numwebpurchases", "numcatalogpurchases", "numstorepurchases")
+for (col in cols_to_convert) {
+data[[col]] <- as.numeric(data[[col]])
+}
+```
+
+# Analysis function
+```{r analysis function}
+analyze_attribute <- function(data, attribute) {
+# Check if the attribute is numeric
+if(!is.numeric(data[[attribute]])) {
+cat("Skipping attribute:", attribute, "- Non-numeric data\n")
+cat("---------------------------------------------------\n")
+return(data)
+}
+# Check for missing values in the attribute column
+if (any(is.na(data[[attribute]]))) {
+cat("Skipping attribute:", attribute, "- Contains missing values. Please impute to proceed\n")
+cat("---------------------------------------------------\n")
+return(data)
+}
+# Create boxplot
+boxplot(data[[attribute]], main = paste("Boxplot of", attribute), ylab = attribute)
+# Identify outliers (IQR method)
+Q <- quantile(data[[attribute]], probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(data[[attribute]], na.rm = TRUE)
+upper_bound <- Q[2] + 1.5*iqr
+lower_bound <- Q[1] - 1.5*iqr
+# Cap outliers
+data[data[[attribute]] > upper_bound, (attribute) := upper_bound]
+data[data[[attribute]] < lower_bound, (attribute) := lower_bound]
+# Verify Outlier Removal
+boxplot(data[[attribute]], main = paste("Boxplot of", attribute,"Outliers Handled"), ylab = attribute)
+# T-test (Response vs. Attribute)
+formula <- as.formula(paste(attribute, "~ as.factor(response)"))
+t_test_result <- t.test(formula, data = data)
+print(t_test_result)
+# Interpretation
+cat("Interpretation for", attribute, ":\n")
+if (t_test_result$p.value < 0.05) {
+cat("There is a statistically significant difference in the mean", attribute,
+"between customers who responded and those who did not (p-value =", t_test_result$p.value, ")\n")
+} else {
+cat("There is no statistically significant difference in the mean", attribute,
+"between customers who responded and those who did not (p-value =", t_test_result$p.value, ")\n")
+}
+cat("---------------------------------------------------\n")
+return(data) # Return the modified data
+}
+```
+
+## Attribute Analysis Loop
+```{r attribute analysis}
+# List of attributes to analyze
+attributes_to_analyze <- c("mntwines", "mntfruits", "mntmeatproducts",
+"mntfishproducts", "mntsweetproducts", "mntgoldprods",
+"numdealspurchases", "numwebpurchases", "numcatalogpurchases",
+"numstorepurchases", "income")
+# Loop through the attributes
+for (attribute in attributes_to_analyze) {
+cat("Analyzing attribute:", attribute, "\n")
+data <- analyze_attribute(data, attribute) # Update data within the loop
+}
+text
+```
+
+## Conclusion
+
+This analysis provides a framework for exploring the relationship between various customer spending and purchase attributes and the 'response' variable. The t-tests offer insights into whether the marketing campaign was more effective for certain customer segments based on their spending and purchase habits. Consider the results and conduct further analysis as needed.
+
+### Key observations
+
+1. Null hypothesis is rejected in case of attributes such as mntwines, mntfruits, mntmeatproducts, mntfishproducts, mntsweetproducts, mntgoldproducts,numwebpurchases,numcatalogpurchases, income.   
+2. Null hypothesis is failed to reject in numdealpurchase,numstore purchase. 
+
+Thus, Marketing has an impact on amount of wines, fruits, meat products, fish products, sweetproducts, goldproducts, number of webpurchases, number of catalog purchases and income i.e., There is a statistically significant difference in means for these attributes 
+
+However, attrubutes number of deal purchases and store purchases doesnt have a statistically significant differenence in means w.r.t response i.e., marketing. 
+
+Clearly amount spent on all the products increases w.r.t marketing proves that the marketing impacts the sales. 
+
+
+

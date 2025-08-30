@@ -1,0 +1,942 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Assignment_wk7_Saripalli</h1>
+<h4 class="author">Balaram</h4>
+<h4 class="date">2025-03-04</h4>
+
+</div>
+
+
+<div class="section level1">
+<h1>Setting the working directory</h1>
+<pre class="r"><code>setwd(&quot;F:/Balaram/Statcourse&quot;)</code></pre>
+<div class="section level2">
+<h2>Assignment Week 7</h2>
+<ol style="list-style-type: decimal;">
+<li>Perform a logistic regression on the marketing.csv dataset</li>
+<li>Predict customer’s response on marketing campaign (i.e.&#160;1 if
+customer accepted the offer in the last campaign, 0 otherwise).</li>
+<li>Interpret the model and comment on its accuracy</li>
+<li>Provide a summary of your findings. What are the implications of
+your analysis for company XYZ? (or if you choose a different data set
+include appropriate response)</li>
+</ol>
+<p>Post Rmd file and a knitted html file to the assignment dropbox.</p>
+</div>
+<div class="section level2">
+<h2>Marketing Data Analysis</h2>
+<p>This analysis aims to predict customer response to a marketing
+campaign using logistic regression. We’ll use the provided marketing
+dataset to build a model that predicts whether a customer accepted the
+offer in the last campaign (1) or not (0).</p>
+</div>
+<div class="section level2">
+<h2>Data Preprocessing and Exploration</h2>
+<p>First, let’s load the necessary libraries and import the data:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice
+## 
+## Attaching package: &#39;caret&#39;
+## 
+## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     lift</code></pre>
+<pre class="r"><code>library(car)</code></pre>
+<pre><code>## Warning: package &#39;car&#39; was built under R version 4.4.3</code></pre>
+<pre><code>## Loading required package: carData
+## 
+## Attaching package: &#39;car&#39;
+## 
+## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     recode
+## 
+## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     some</code></pre>
+<pre class="r"><code>library(MASS)</code></pre>
+<pre><code>## Warning: package &#39;MASS&#39; was built under R version 4.4.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;MASS&#39;
+## 
+## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     select</code></pre>
+<pre class="r"><code>library(pROC)</code></pre>
+<pre><code>## Type &#39;citation(&quot;pROC&quot;)&#39; for a citation.
+## 
+## Attaching package: &#39;pROC&#39;
+## 
+## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     cov, smooth, var</code></pre>
+<p>Read the data file</p>
+<pre class="r"><code>data &lt;- read.csv(&quot;marketing.csv&quot;)</code></pre>
+<p>Display the first few rows and structure of the data</p>
+<pre class="r"><code>head(data)</code></pre>
+<pre><code>##      ID Year_Birth  Education Marital_Status      Income Kidhome Dt_Customer
+## 1  1826       1970 Graduation       Divorced $84,835.00        0   6/16/2014
+## 2     1       1961 Graduation         Single $57,091.00        0   6/15/2014
+## 3 10476       1958 Graduation        Married $67,267.00        0   5/13/2014
+## 4  1386       1967 Graduation       Together $32,474.00        1   5/11/2014
+## 5  5371       1989 Graduation         Single $21,474.00        1    4/8/2014
+## 6  7348       1958        PhD         Single $71,691.00        0   3/17/2014
+##   MntWines MntFruits MntMeatProducts MntFishProducts MntSweetProducts
+## 1      189       104             379             111              189
+## 2      464         5              64               7                0
+## 3      134        11              59              15                2
+## 4       10         0               1               0                0
+## 5        6        16              24              11                0
+## 6      336       130             411             240               32
+##   MntGoldProds NumDealsPurchases NumWebPurchases NumCatalogPurchases
+## 1          218                 1               4                   4
+## 2           37                 1               7                   3
+## 3           30                 1               3                   2
+## 4            0                 1               1                   0
+## 5           34                 2               3                   1
+## 6           43                 1               4                   7
+##   NumStorePurchases Response Country
+## 1                 6        1      SP
+## 2                 7        1      CA
+## 3                 5        0      US
+## 4                 2        0     AUS
+## 5                 2        1      SP
+## 6                 5        1      SP</code></pre>
+<pre class="r"><code>str(data)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    2240 obs. of  19 variables:
+##  $ ID                 : int  1826 1 10476 1386 5371 7348 4073 1991 4047 9477 ...
+##  $ Year_Birth         : int  1970 1961 1958 1967 1989 1958 1954 1967 1954 1954 ...
+##  $ Education          : chr  &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; ...
+##  $ Marital_Status     : chr  &quot;Divorced&quot; &quot;Single&quot; &quot;Married&quot; &quot;Together&quot; ...
+##  $ Income             : chr  &quot;$84,835.00 &quot; &quot;$57,091.00 &quot; &quot;$67,267.00 &quot; &quot;$32,474.00 &quot; ...
+##  $ Kidhome            : int  0 0 0 1 1 0 0 0 0 0 ...
+##  $ Dt_Customer        : chr  &quot;6/16/2014&quot; &quot;6/15/2014&quot; &quot;5/13/2014&quot; &quot;5/11/2014&quot; ...
+##  $ MntWines           : int  189 464 134 10 6 336 769 78 384 384 ...
+##  $ MntFruits          : int  104 5 11 0 16 130 80 0 0 0 ...
+##  $ MntMeatProducts    : int  379 64 59 1 24 411 252 11 102 102 ...
+##  $ MntFishProducts    : int  111 7 15 0 11 240 15 0 21 21 ...
+##  $ MntSweetProducts   : int  189 0 2 0 0 32 34 0 32 32 ...
+##  $ MntGoldProds       : int  218 37 30 0 34 43 65 7 5 5 ...
+##  $ NumDealsPurchases  : int  1 1 1 1 2 1 1 1 3 3 ...
+##  $ NumWebPurchases    : int  4 7 3 1 3 4 10 2 6 6 ...
+##  $ NumCatalogPurchases: int  4 3 2 0 1 7 10 1 2 2 ...
+##  $ NumStorePurchases  : int  6 7 5 2 2 5 7 3 9 9 ...
+##  $ Response           : int  1 1 0 0 1 1 1 0 0 0 ...
+##  $ Country            : chr  &quot;SP&quot; &quot;CA&quot; &quot;US&quot; &quot;AUS&quot; ...</code></pre>
+<p>The given data has 2240 obs and 19 variables</p>
+</div>
+</div>
+<div class="section level1">
+<h1>Data Processing</h1>
+<pre class="r"><code># Convert Dt_Customer to year
+data$Year_Customer &lt;- as.numeric(format(as.Date(data$Dt_Customer, &quot;%m/%d/%Y&quot;), &quot;%Y&quot;))
+
+# Calculate age at the time of joining
+data$Age &lt;- data$Year_Customer - data$Year_Birth
+
+# Convert categorical variables to factors
+data$Education &lt;- as.factor(data$Education)
+data$Marital_Status &lt;- as.factor(data$Marital_Status)
+data$Response &lt;- as.factor(data$Response)
+data$Country &lt;- as.factor(data$Country)
+
+
+# Remove unnecessary columns
+data &lt;- data %&gt;% dplyr::select(-any_of(c(&quot;ID&quot;, &quot;Dt_Customer&quot;, &quot;Year_Customer&quot;, &quot;Year_Birth&quot;)))
+
+
+# Handle missing values if any
+data &lt;- na.omit(data)
+
+# Convert Income to numeric (remove $ and commas)
+data$Income &lt;- as.numeric(gsub(&quot;[$,]&quot;, &quot;&quot;, data$Income))
+
+# Display the first few rows and structure of the modified data
+head(data)</code></pre>
+<pre><code>##    Education Marital_Status Income Kidhome MntWines MntFruits MntMeatProducts
+## 1 Graduation       Divorced  84835       0      189       104             379
+## 2 Graduation         Single  57091       0      464         5              64
+## 3 Graduation        Married  67267       0      134        11              59
+## 4 Graduation       Together  32474       1       10         0               1
+## 5 Graduation         Single  21474       1        6        16              24
+## 6        PhD         Single  71691       0      336       130             411
+##   MntFishProducts MntSweetProducts MntGoldProds NumDealsPurchases
+## 1             111              189          218                 1
+## 2               7                0           37                 1
+## 3              15                2           30                 1
+## 4               0                0            0                 1
+## 5              11                0           34                 2
+## 6             240               32           43                 1
+##   NumWebPurchases NumCatalogPurchases NumStorePurchases Response Country Age
+## 1               4                   4                 6        1      SP  44
+## 2               7                   3                 7        1      CA  53
+## 3               3                   2                 5        0      US  56
+## 4               1                   0                 2        0     AUS  47
+## 5               3                   1                 2        1      SP  25
+## 6               4                   7                 5        1      SP  56</code></pre>
+<pre class="r"><code>str(data)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    2240 obs. of  17 variables:
+##  $ Education          : Factor w/ 5 levels &quot;2n Cycle&quot;,&quot;Basic&quot;,..: 3 3 3 3 3 5 1 3 5 5 ...
+##  $ Marital_Status     : Factor w/ 8 levels &quot;Absurd&quot;,&quot;Alone&quot;,..: 3 5 4 6 5 5 4 6 4 4 ...
+##  $ Income             : num  84835 57091 67267 32474 21474 ...
+##  $ Kidhome            : int  0 0 0 1 1 0 0 0 0 0 ...
+##  $ MntWines           : int  189 464 134 10 6 336 769 78 384 384 ...
+##  $ MntFruits          : int  104 5 11 0 16 130 80 0 0 0 ...
+##  $ MntMeatProducts    : int  379 64 59 1 24 411 252 11 102 102 ...
+##  $ MntFishProducts    : int  111 7 15 0 11 240 15 0 21 21 ...
+##  $ MntSweetProducts   : int  189 0 2 0 0 32 34 0 32 32 ...
+##  $ MntGoldProds       : int  218 37 30 0 34 43 65 7 5 5 ...
+##  $ NumDealsPurchases  : int  1 1 1 1 2 1 1 1 3 3 ...
+##  $ NumWebPurchases    : int  4 7 3 1 3 4 10 2 6 6 ...
+##  $ NumCatalogPurchases: int  4 3 2 0 1 7 10 1 2 2 ...
+##  $ NumStorePurchases  : int  6 7 5 2 2 5 7 3 9 9 ...
+##  $ Response           : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 2 2 1 1 2 2 2 1 1 1 ...
+##  $ Country            : Factor w/ 8 levels &quot;AUS&quot;,&quot;CA&quot;,&quot;GER&quot;,..: 7 2 8 1 7 7 3 7 8 4 ...
+##  $ Age                : num  44 53 56 47 25 56 60 47 60 60 ...</code></pre>
+<pre class="r"><code># Display summary statistics
+summary(data)</code></pre>
+<pre><code>##       Education     Marital_Status     Income          Kidhome      
+##  2n Cycle  : 203   Married :864    Min.   :  1730   Min.   :0.0000  
+##  Basic     :  54   Together:580    1st Qu.: 35303   1st Qu.:0.0000  
+##  Graduation:1127   Single  :480    Median : 51382   Median :0.0000  
+##  Master    : 370   Divorced:232    Mean   : 52247   Mean   :0.4442  
+##  PhD       : 486   Widow   : 77    3rd Qu.: 68522   3rd Qu.:1.0000  
+##                    Alone   :  3    Max.   :666666   Max.   :2.0000  
+##                    (Other) :  4    NA&#39;s   :24                       
+##     MntWines         MntFruits     MntMeatProducts  MntFishProducts 
+##  Min.   :   0.00   Min.   :  0.0   Min.   :   0.0   Min.   :  0.00  
+##  1st Qu.:  23.75   1st Qu.:  1.0   1st Qu.:  16.0   1st Qu.:  3.00  
+##  Median : 173.50   Median :  8.0   Median :  67.0   Median : 12.00  
+##  Mean   : 303.94   Mean   : 26.3   Mean   : 166.9   Mean   : 37.53  
+##  3rd Qu.: 504.25   3rd Qu.: 33.0   3rd Qu.: 232.0   3rd Qu.: 50.00  
+##  Max.   :1493.00   Max.   :199.0   Max.   :1725.0   Max.   :259.00  
+##                                                                     
+##  MntSweetProducts  MntGoldProds    NumDealsPurchases NumWebPurchases 
+##  Min.   :  0.00   Min.   :  0.00   Min.   : 0.000    Min.   : 0.000  
+##  1st Qu.:  1.00   1st Qu.:  9.00   1st Qu.: 1.000    1st Qu.: 2.000  
+##  Median :  8.00   Median : 24.00   Median : 2.000    Median : 4.000  
+##  Mean   : 27.06   Mean   : 44.02   Mean   : 2.325    Mean   : 4.085  
+##  3rd Qu.: 33.00   3rd Qu.: 56.00   3rd Qu.: 3.000    3rd Qu.: 6.000  
+##  Max.   :263.00   Max.   :362.00   Max.   :15.000    Max.   :27.000  
+##                                                                      
+##  NumCatalogPurchases NumStorePurchases Response    Country          Age        
+##  Min.   : 0.000      Min.   : 0.00     0:1906   SP     :1095   Min.   : 16.00  
+##  1st Qu.: 0.000      1st Qu.: 3.00     1: 334   SA     : 337   1st Qu.: 36.00  
+##  Median : 2.000      Median : 5.00              CA     : 268   Median : 43.00  
+##  Mean   : 2.662      Mean   : 5.79              AUS    : 160   Mean   : 44.22  
+##  3rd Qu.: 4.000      3rd Qu.: 8.00              IND    : 148   3rd Qu.: 54.00  
+##  Max.   :28.000      Max.   :13.00              GER    : 120   Max.   :121.00  
+##                                                 (Other): 112</code></pre>
+<div class="section level2">
+<h2>1. Perform a logistic regression on the marketing.csv dataset</h2>
+<pre class="r"><code># Split the data into training and testing sets
+set.seed(123)
+train_index &lt;- createDataPartition(data$Response, p = 0.7, list = FALSE)
+train_data &lt;- data[train_index, ]
+test_data &lt;- data[-train_index, ]
+
+# Fit the logistic regression model with the new Age feature
+model &lt;- glm(Response ~ ., data = train_data, family = binomial)
+
+# Display model summary
+summary(model)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = Response ~ ., family = binomial, data = train_data)
+## 
+## Coefficients:
+##                          Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -1.401e+01  8.827e+02  -0.016  0.98734    
+## EducationBasic         -5.435e-01  8.113e-01  -0.670  0.50297    
+## EducationGraduation     1.742e-01  3.386e-01   0.515  0.60686    
+## EducationMaster         4.832e-01  3.764e-01   1.284  0.19925    
+## EducationPhD            7.250e-01  3.617e-01   2.004  0.04504 *  
+## Marital_StatusAlone    -7.663e-03  1.073e+03   0.000  0.99999    
+## Marital_StatusDivorced  1.338e+01  8.827e+02   0.015  0.98790    
+## Marital_StatusMarried   1.247e+01  8.827e+02   0.014  0.98873    
+## Marital_StatusSingle    1.339e+01  8.827e+02   0.015  0.98790    
+## Marital_StatusTogether  1.222e+01  8.827e+02   0.014  0.98895    
+## Marital_StatusWidow     1.366e+01  8.827e+02   0.015  0.98765    
+## Marital_StatusYOLO      1.487e+01  8.827e+02   0.017  0.98656    
+## Income                 -1.285e-05  7.208e-06  -1.783  0.07457 .  
+## Kidhome                 3.971e-01  2.109e-01   1.883  0.05972 .  
+## MntWines                1.950e-03  3.253e-04   5.995 2.03e-09 ***
+## MntFruits               3.276e-03  2.462e-03   1.330  0.18343    
+## MntMeatProducts         2.457e-03  5.277e-04   4.656 3.22e-06 ***
+## MntFishProducts        -5.154e-04  1.858e-03  -0.277  0.78150    
+## MntSweetProducts       -3.446e-04  2.358e-03  -0.146  0.88383    
+## MntGoldProds            1.188e-03  1.664e-03   0.714  0.47553    
+## NumDealsPurchases       1.876e-02  4.309e-02   0.435  0.66324    
+## NumWebPurchases         1.070e-01  3.261e-02   3.281  0.00104 ** 
+## NumCatalogPurchases     4.193e-02  4.054e-02   1.034  0.30107    
+## NumStorePurchases      -1.949e-01  3.521e-02  -5.536 3.10e-08 ***
+## CountryCA              -4.236e-01  3.683e-01  -1.150  0.25009    
+## CountryGER             -1.100e-01  4.383e-01  -0.251  0.80190    
+## CountryIND             -9.084e-01  4.643e-01  -1.956  0.05041 .  
+## CountryME               1.553e+01  5.798e+02   0.027  0.97864    
+## CountrySA              -3.730e-01  3.495e-01  -1.067  0.28586    
+## CountrySP              -2.633e-01  3.042e-01  -0.865  0.38678    
+## CountryUS              -6.331e-01  4.802e-01  -1.318  0.18734    
+## Age                    -2.099e-02  7.266e-03  -2.888  0.00387 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1316.6  on 1552  degrees of freedom
+## Residual deviance: 1070.4  on 1521  degrees of freedom
+##   (16 observations deleted due to missingness)
+## AIC: 1134.4
+## 
+## Number of Fisher Scoring iterations: 13</code></pre>
+</div>
+</div>
+<div class="section level1">
+<h1>Interpretation:</h1>
+<p>we have created a variable age using the year of birth and year of
+joing and removed those features for analysis (As this might give idea
+on which age group people are purchasing etc.)</p>
+<ol style="list-style-type: decimal;">
+<li><p><strong>Model Fit:</strong> The model’s AIC is 1134.4, indicating
+a reasonable fit. A lower AIC suggests a better model, balancing
+goodness of fit and model complexity.</p></li>
+<li><p>The residual deviance (1070.4) is lower than the null deviance
+(1316.6), suggesting the model explains some of the variation in the
+response variable.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1><strong>Significant Predictors</strong>:</h1>
+<p>Amount spent on wines, amount spent on meat products, number of store
+purchases, age and number of webpurchases have p&lt;0.05 and are highly
+significant predictors.</p>
+<p>We have consider p &lt; 0.001 as highly significant, p &lt; 0.01 as
+significant and p&lt; 0.05 as marginally significant</p>
+<p><strong>Highly significant</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>MntWines (β = 1.950e-03, p &lt; 0.001): Higher spending on wines
+is strongly associated with a higher likelihood of response.</p></li>
+<li><p>MntMeatProducts (β = 2.457e-03, p &lt; 0.001): Increased spending
+on meat products significantly increases the odds of response.</p></li>
+<li><p>NumStorePurchases (β = -1.949e-01, p &lt; 0.001): More store
+purchases are associated with a lower probability of response.</p></li>
+</ol>
+<p><strong>Significant</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Age (β = -2.099e-02, p &lt; 0.01): Older customers are slightly
+less likely to respond to the campaign.</p></li>
+<li><p>NumWebPurchases (β = 1.070e-01, p &lt; 0.01): More web purchases
+are associated with a higher likelihood of response.</p></li>
+</ol>
+<p><strong>Marginally Significant</strong></p>
+<ol style="list-style-type: decimal;">
+<li>EducationPhD (β = 7.250e-01, p &lt; 0.05): Customers with a PhD are
+more likely to respond compared to the baseline education level.</li>
+</ol>
+<p><strong>Other Observations</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Income shows a marginally negative effect (β = -1.285e-05, p &lt;
+0.1), suggesting higher income might slightly decrease response
+likelihood.</p></li>
+<li><p>Kidhome has a positive effect (β = 3.971e-01, p &lt; 0.1),
+indicating having children at home might increase response
+probability.</p></li>
+<li><p>Most marital status categories and country variables are not
+statistically significant.</p></li>
+</ol>
+<p><strong>Implications</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Focus on wine and meat product promotions to increase campaign
+response.</p></li>
+<li><p>Optimize web purchasing experiences, as they are positively
+associated with response.</p></li>
+<li><p>Tailor strategies for older customers who may be less
+responsive.</p></li>
+<li><p>Consider specialized approaches for highly educated (PhD)
+customers.</p></li>
+<li><p>Re-evaluate in-store purchase strategies, as they negatively
+correlate with campaign response.</p></li>
+</ol>
+<p>This model provides valuable insights for targeting and personalizing
+marketing efforts, though further analysis may be needed to understand
+some of the unexpected relationships (e.g., negative effect of store
+purchases).</p>
+</div>
+<div class="section level1">
+<h1>2. Predict customer’s response on marketing campaign (i.e.&#160;1 if
+customer accepted the offer in the last campaign, 0 otherwise).</h1>
+<pre class="r"><code># Make predictions on the test set
+predictions &lt;- predict(model, newdata = test_data, type = &quot;response&quot;)
+
+# Convert probabilities to binary predictions
+predicted_classes &lt;- ifelse(predictions &gt; 0.5, 1, 0)
+
+# Create confusion matrix
+conf_matrix &lt;- confusionMatrix(as.factor(predicted_classes), test_data$Response)
+print(conf_matrix)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction   0   1
+##          0 547  81
+##          1  17  18
+##                                           
+##                Accuracy : 0.8522          
+##                  95% CI : (0.8229, 0.8783)
+##     No Information Rate : 0.8507          
+##     P-Value [Acc &gt; NIR] : 0.4833          
+##                                           
+##                   Kappa : 0.2068          
+##                                           
+##  Mcnemar&#39;s Test P-Value : 1.966e-10       
+##                                           
+##             Sensitivity : 0.9699          
+##             Specificity : 0.1818          
+##          Pos Pred Value : 0.8710          
+##          Neg Pred Value : 0.5143          
+##              Prevalence : 0.8507          
+##          Detection Rate : 0.8250          
+##    Detection Prevalence : 0.9472          
+##       Balanced Accuracy : 0.5758          
+##                                           
+##        &#39;Positive&#39; Class : 0               
+## </code></pre>
+<pre class="r"><code># Calculate ROC curve and AUC
+roc_curve &lt;- roc(test_data$Response, predictions)</code></pre>
+<pre><code>## Setting levels: control = 0, case = 1</code></pre>
+<pre><code>## Setting direction: controls &lt; cases</code></pre>
+<pre class="r"><code>auc_value &lt;- auc(roc_curve)
+
+# Plot ROC curve
+plot(roc_curve, main = &quot;ROC Curve&quot;, col = &quot;blue&quot;)
+text(0.8, 0.2, paste(&quot;AUC =&quot;, round(auc_value, 3)), col = &quot;red&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Print additional performance metrics
+cat(&quot;\nAccuracy:&quot;, conf_matrix$overall[&#39;Accuracy&#39;])</code></pre>
+<pre><code>## 
+## Accuracy: 0.852187</code></pre>
+<pre class="r"><code>cat(&quot;\nSensitivity:&quot;, conf_matrix$byClass[&#39;Sensitivity&#39;])</code></pre>
+<pre><code>## 
+## Sensitivity: 0.9698582</code></pre>
+<pre class="r"><code>cat(&quot;\nSpecificity:&quot;, conf_matrix$byClass[&#39;Specificity&#39;])</code></pre>
+<pre><code>## 
+## Specificity: 0.1818182</code></pre>
+<pre class="r"><code>cat(&quot;\nAUC:&quot;, round(auc_value, 3))</code></pre>
+<pre><code>## 
+## AUC: 0.727</code></pre>
+<ol style="list-style-type: decimal;">
+<li><strong>Confusion Matrix:</strong> True Negatives (547): The model
+correctly predicted 547 customers who did not respond to the
+campaign.</li>
+</ol>
+<p>True Positives (18): The model correctly predicted 18 customers who
+responded to the campaign.</p>
+<p>False Negatives (81): The model incorrectly predicted 81 customers as
+non-responders when they actually responded.</p>
+<p>False Positives (17): The model incorrectly predicted 17 customers as
+responders when they did not respond.</p>
+<ol start="2" style="list-style-type: decimal;">
+<li><p><strong>Accuracy:</strong> The overall accuracy of the model is
+85.22%, meaning the model correctly predicted 85.22% of the test cases.
+While this is a high value, it may be misleading due to class imbalance
+(the majority class is “non-responders”).</p></li>
+<li><p><strong>Sensitivity (Recall for Class 0):</strong> Sensitivity is
+96.99%, indicating that the model is very good at identifying
+non-responders (class 0). This is expected since most of the data
+belongs to this class.</p></li>
+<li><p><strong>Specificity (Recall for Class 1):</strong> Specificity is
+18.18%, showing that the model struggles to identify responders (class
+1). This indicates poor performance in detecting the minority
+class.</p></li>
+<li><p><strong>AUC (Area Under the Curve):</strong> The AUC is 0.727,
+which indicates moderate discriminative ability of the model. An AUC
+closer to 1 would signify excellent performance, while an AUC of 0.5
+would indicate no discriminative power.</p></li>
+<li><p><strong>Class Imbalance:</strong> The prevalence of class 0
+(“non-responders”) is much higher than class 1 (“responders”). This
+imbalance skews metrics like accuracy, making it less reliable for
+assessing model performance.</p></li>
+<li><p><strong>Kappa Statistic:</strong> The Kappa value is 0.2068,
+which indicates slight agreement between the predicted and actual
+classes beyond chance.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1>4. Provide a summary of your findings. What are the implications of
+your analysis for company XYZ? (or if you choose a different data set
+include appropriate response)</h1>
+<p><strong>Model Insights:</strong> The logistic regression model
+performs well in predicting non-responders but struggles with
+identifying responders due to class imbalance. We can use some imbalance
+data handling techniques like over sampling, under sampling or SMOTE
+technique to handle this problem.</p>
+<p>Significant predictors from earlier analysis, such as spending on
+wine and meat products, age, and web purchases, likely contribute to
+prediction accuracy for certain customer segments.</p>
+<p><strong>Performance Metrics:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>While accuracy is high at 85.22%, low specificity (18.18%) and
+moderate AUC (0.727) suggest that the model is not effective at
+identifying customers who are likely to respond positively to
+campaigns.</p></li>
+<li><p>Sensitivity for non-responders (96.99%) indicates that most
+predictions are skewed toward the majority class.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1>As the model performance is not good lets use setep wise AIC for
+selecting relevant features and improvee the model.</h1>
+<pre class="r"><code>model_step &lt;- glm(Response ~ ., data = train_data, family = binomial) %&gt;%
+  stepAIC(trace = FALSE)
+
+# Display the final model
+summary(model_step)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = Response ~ Education + Marital_Status + Income + 
+##     Kidhome + MntWines + MntMeatProducts + NumWebPurchases + 
+##     NumStorePurchases + Age, family = binomial, data = train_data)
+## 
+## Coefficients:
+##                          Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -1.425e+01  8.827e+02  -0.016 0.987121    
+## EducationBasic         -5.060e-01  8.103e-01  -0.624 0.532360    
+## EducationGraduation     2.271e-01  3.371e-01   0.674 0.500482    
+## EducationMaster         5.103e-01  3.714e-01   1.374 0.169414    
+## EducationPhD            7.148e-01  3.556e-01   2.010 0.044418 *  
+## Marital_StatusAlone    -2.316e-01  1.072e+03   0.000 0.999828    
+## Marital_StatusDivorced  1.336e+01  8.827e+02   0.015 0.987921    
+## Marital_StatusMarried   1.244e+01  8.827e+02   0.014 0.988754    
+## Marital_StatusSingle    1.330e+01  8.827e+02   0.015 0.987982    
+## Marital_StatusTogether  1.221e+01  8.827e+02   0.014 0.988968    
+## Marital_StatusWidow     1.366e+01  8.827e+02   0.015 0.987656    
+## Marital_StatusYOLO      1.443e+01  8.827e+02   0.016 0.986960    
+## Income                 -1.121e-05  6.655e-06  -1.684 0.092241 .  
+## Kidhome                 3.290e-01  1.953e-01   1.684 0.092140 .  
+## MntWines                2.032e-03  3.169e-04   6.414 1.42e-10 ***
+## MntMeatProducts         2.778e-03  4.633e-04   5.996 2.02e-09 ***
+## NumWebPurchases         1.157e-01  3.038e-02   3.809 0.000139 ***
+## NumStorePurchases      -1.942e-01  3.414e-02  -5.690 1.27e-08 ***
+## Age                    -2.021e-02  7.193e-03  -2.810 0.004956 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1316.6  on 1552  degrees of freedom
+## Residual deviance: 1085.4  on 1534  degrees of freedom
+##   (16 observations deleted due to missingness)
+## AIC: 1123.4
+## 
+## Number of Fisher Scoring iterations: 13</code></pre>
+<pre class="r"><code># Calculate VIF for the final model
+vif_values &lt;- vif(model_step)
+print(vif_values)</code></pre>
+<pre><code>##                       GVIF Df GVIF^(1/(2*Df))
+## Education         1.159170  4        1.018635
+## Marital_Status    1.142868  7        1.009584
+## Income            3.729257  1        1.931128
+## Kidhome           1.769164  1        1.330099
+## MntWines          2.487939  1        1.577320
+## MntMeatProducts   2.726580  1        1.651236
+## NumWebPurchases   1.384022  1        1.176445
+## NumStorePurchases 1.827921  1        1.352006
+## Age               1.219942  1        1.104510</code></pre>
+<pre class="r"><code># Make predictions on the test set
+predictions &lt;- predict(model_step, newdata = test_data, type = &quot;response&quot;)
+
+# Determine the optimal threshold using the ROC curve
+roc_curve &lt;- roc(test_data$Response, predictions)</code></pre>
+<pre><code>## Setting levels: control = 0, case = 1</code></pre>
+<pre><code>## Setting direction: controls &lt; cases</code></pre>
+<pre class="r"><code>plot(roc_curve, main = &quot;ROC Curve&quot;, col = &quot;blue&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>optimal_threshold &lt;- roc_curve$thresholds[which.max(roc_curve$sensitivities + roc_curve$specificities)]
+cat(&quot;Optimal Threshold:&quot;, optimal_threshold)</code></pre>
+<pre><code>## Optimal Threshold: 0.1011479</code></pre>
+<pre class="r"><code># Convert probabilities to binary predictions using the optimal threshold
+predicted_classes &lt;- ifelse(predictions &gt; optimal_threshold, 1, 0)
+
+# Create a confusion matrix
+conf_matrix &lt;- confusionMatrix(as.factor(predicted_classes), test_data$Response)
+print(conf_matrix)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction   0   1
+##          0 333  26
+##          1 231  73
+##                                           
+##                Accuracy : 0.6124          
+##                  95% CI : (0.5741, 0.6496)
+##     No Information Rate : 0.8507          
+##     P-Value [Acc &gt; NIR] : 1               
+##                                           
+##                   Kappa : 0.1768          
+##                                           
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16          
+##                                           
+##             Sensitivity : 0.5904          
+##             Specificity : 0.7374          
+##          Pos Pred Value : 0.9276          
+##          Neg Pred Value : 0.2401          
+##              Prevalence : 0.8507          
+##          Detection Rate : 0.5023          
+##    Detection Prevalence : 0.5415          
+##       Balanced Accuracy : 0.6639          
+##                                           
+##        &#39;Positive&#39; Class : 0               
+## </code></pre>
+<pre class="r"><code># Calculate additional performance metrics
+cat(&quot;\nAccuracy:&quot;, conf_matrix$overall[&#39;Accuracy&#39;])</code></pre>
+<pre><code>## 
+## Accuracy: 0.612368</code></pre>
+<pre class="r"><code>cat(&quot;\nSensitivity:&quot;, conf_matrix$byClass[&#39;Sensitivity&#39;])</code></pre>
+<pre><code>## 
+## Sensitivity: 0.5904255</code></pre>
+<pre class="r"><code>cat(&quot;\nSpecificity:&quot;, conf_matrix$byClass[&#39;Specificity&#39;])</code></pre>
+<pre><code>## 
+## Specificity: 0.7373737</code></pre>
+<pre class="r"><code>cat(&quot;\nAUC:&quot;, round(auc(roc_curve), 3))</code></pre>
+<pre><code>## 
+## AUC: 0.705</code></pre>
+</div>
+<div class="section level1">
+<h1>3. Interpret the model and comment on its accuracy of updated
+model</h1>
+<p>The updated model incorporates stepwise feature selection using
+stepAIC() and evaluates multicollinearity using VIF analysis. While the
+model has improved in terms of simplicity and interpretability, the AUC
+(Area Under the Curve) is slightly lower compared to the original model,
+indicating reduced discriminative ability. Below is a detailed
+interpretation of the updated model’s results:</p>
+</div>
+<div class="section level1">
+<h1><strong>Model Fit and Predictors</strong></h1>
+<p><strong>Coefficients and Significance:</strong></p>
+<p><strong>Significant predictors include:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>MntWines (p &lt; 0.001): Higher spending on wines strongly
+correlates with a higher likelihood of response.</p></li>
+<li><p>MntMeatProducts (p &lt; 0.001): Increased spending on meat
+products significantly increases the odds of response.</p></li>
+<li><p>NumWebPurchases (p &lt; 0.001): More web purchases are positively
+associated with campaign response.</p></li>
+<li><p>NumStorePurchases (p &lt; 0.001): More store purchases are
+negatively correlated with response.</p></li>
+<li><p>Age (p &lt; 0.01): Older customers are slightly less likely to
+respond.</p></li>
+</ol>
+<p><strong>Marginally significant predictors:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Income (p &lt; 0.1): Higher income may slightly decrease the
+likelihood of response.</p></li>
+<li><p>Kidhome (p &lt; 0.1): Having children at home might increase
+response probability.</p></li>
+</ol>
+<p>#<strong>Multicollinearity (VIF Analysis):</strong> None of the VIF
+values exceed the threshold of 5, indicating that multicollinearity is
+not a major concern in this model. The highest VIF is for Income
+(3.729), which is still within acceptable limits.</p>
+</div>
+<div class="section level1">
+<h1>Model performace Metrics:</h1>
+<p>Null Deviance: 1316.6</p>
+<p>Residual Deviance: 1085.4</p>
+<p>AIC: 1123.4</p>
+<p>The reduction in deviance and AIC suggests that the model explains
+some variability in the response variable while maintaining
+simplicity.</p>
+<p><strong>Performance Metrics</strong> - True Negatives: 333 - True
+Positives: 73 - False Negatives: 26 - False Positives: 231</p>
+<ol start="2" style="list-style-type: decimal;">
+<li><strong>Accuracy:</strong></li>
+</ol>
+<ul>
+<li>The accuracy of the updated model is <strong>61.24%</strong>, which
+is lower than the original model’s accuracy (~85%). This drop could be
+attributed to balancing sensitivity and specificity using the ROC
+curve’s optimal threshold.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal;">
+<li><strong>Sensitivity:</strong></li>
+</ol>
+<ul>
+<li>Sensitivity is <strong>59.04%</strong>, indicating that the model
+correctly identifies ~59% of responders.</li>
+</ul>
+<ol start="4" style="list-style-type: decimal;">
+<li><strong>Specificity:</strong></li>
+</ol>
+<ul>
+<li>Specificity is <strong>73.74%</strong>, meaning the model correctly
+identifies ~74% of non-responders.</li>
+</ul>
+<ol start="5" style="list-style-type: decimal;">
+<li><strong>AUC (Area Under the Curve):</strong></li>
+</ol>
+<ul>
+<li>The AUC is <strong>0.705</strong>, which indicates moderate
+discriminative ability but is slightly lower than the original model’s
+AUC (~0.727).</li>
+</ul>
+<hr/>
+<div class="section level3">
+<h3><strong>Comparison with Original Model</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Original Model</th>
+<th>Updated Model</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Accuracy</td>
+<td>~85%</td>
+<td>~61%</td>
+</tr>
+<tr class="even">
+<td>Sensitivity</td>
+<td>~96%</td>
+<td>~59%</td>
+</tr>
+<tr class="odd">
+<td>Specificity</td>
+<td>~18%</td>
+<td>~74%</td>
+</tr>
+<tr class="even">
+<td>AUC</td>
+<td>~0.727</td>
+<td>~0.705</td>
+</tr>
+<tr class="odd">
+<td>Null Deviance</td>
+<td>~1316</td>
+<td>~1316</td>
+</tr>
+<tr class="even">
+<td>Residual Deviance</td>
+<td>~1070</td>
+<td>~1085</td>
+</tr>
+<tr class="odd">
+<td>AIC</td>
+<td>~1134</td>
+<td>~1123</td>
+</tr>
+</tbody>
+</table>
+<div class="section level4">
+<h4>Observations:</h4>
+<ol style="list-style-type: decimal;">
+<li><p>The updated model has better specificity but lower sensitivity
+compared to the original model, suggesting improved performance in
+identifying non-responders while struggling to identify
+responders.</p></li>
+<li><p>The AUC has decreased slightly, indicating reduced overall
+discriminative ability.</p></li>
+<li><p>The updated model uses fewer predictors, making it simpler and
+more interpretable, but this may have sacrificed some predictive
+power.</p></li>
+</ol>
+<p><strong>Summary of changes mades</strong> - Stepwise feature
+selection (<code>stepAIC</code>) was performed to remove unnecessary
+variables, improving interpretability.</p>
+<ul>
+<li><p>VIF analysis confirmed that multicollinearity was not a major
+issue in the updated model.</p></li>
+<li><p>Variables with high p-values were removed during stepwise
+selection, leaving only significant predictors in the final
+model.</p></li>
+<li><p>An optimal threshold was determined from the ROC curve to balance
+sensitivity and specificity.</p></li>
+<li><p>Unnecessary variables were removed using <code>stepAIC</code>,
+resulting in a lower AIC value (1123 vs.&#160;1134) and improved
+specificity.</p></li>
+</ul>
+</div>
+</div>
+<div class="section level3">
+<h3>Implications for Company XYZ</h3>
+<ol style="list-style-type: decimal;">
+<li><strong>Targeted Marketing Strategies:</strong></li>
+</ol>
+<ul>
+<li>Focus marketing efforts on customers who spend more on wines and
+meat products, as these are significant predictors of campaign
+response.</li>
+<li>Optimize web purchasing experiences to boost engagement.</li>
+</ul>
+<ol start="2" style="list-style-type: decimal;">
+<li><strong>Addressing Class Imbalance:</strong></li>
+</ol>
+<ul>
+<li>The low sensitivity suggests that responders are underrepresented in
+predictions due to class imbalance.</li>
+<li>Techniques like oversampling, undersampling, or SMOTE should be
+explored to improve sensitivity.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal;">
+<li><strong>Simplified Model for Actionable Insights:</strong></li>
+</ol>
+<ul>
+<li>The updated model provides clearer insights into key predictors
+while maintaining simplicity.</li>
+<li>Use these insights to tailor campaigns for specific customer
+segments based on age, spending habits, and family structure.</li>
+</ul>
+<ol start="4" style="list-style-type: decimal;">
+<li><strong>Future Improvements:</strong></li>
+</ol>
+<ul>
+<li>Experiment with alternative algorithms like random forests or
+gradient boosting for better performance.</li>
+<li>Incorporate external data sources or additional features to enhance
+predictive power.</li>
+</ul>
+<p><strong>Recommendations:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Improve model performance by experimenting with other algorithms
+or by handling imbalanced datasets.</p></li>
+<li><p>Incorporate additional features or external data sources that
+might better capture customer intent or likelihood to respond.</p></li>
+<li><p>Use targeted marketing strategies based on insights from
+significant predictors like product spending habits and channel
+preferences.</p></li>
+</ol>
+</div>
+<div class="section level3">
+<h3>Conclusion</h3>
+<p>While the updated model improves interpretability and addresses
+multicollinearity concerns, its performance metrics (e.g., AUC) are
+slightly worse than those of the original model due to reduced
+sensitivity for responders. To achieve better results, addressing class
+imbalance should be prioritized in future iterations of modeling efforts
+for Company XYZ’s marketing campaigns.</p>
+</div>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

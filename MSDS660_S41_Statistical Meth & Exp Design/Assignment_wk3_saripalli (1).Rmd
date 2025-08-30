@@ -1,0 +1,191 @@
+---
+title: "Assignment_Wk3_Saripalli"
+output: html_document
+date: "2025-02-04"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment week 3
+
+# Question
+Using the Pew Research Center’s data and the corresponding questionnaire, consider Q46.  Investigate how personal data (age, education, income, etc.) are correlated to responses in Q46.  Is there other correlation between Q20, Q22, and Q23? 
+
+In the assignments folder post:
+
+Include the weight variable in your response estimates
+Plots (histogram, box, bar, scatter, etc.?) of the data. 
+A brief explanation of your analysis process and your interpretation of the data. (What is the data, what did you do with the data, what do the results mean?)
+Your Rmd file and knitted html file
+
+## Solution 
+This report investigates two major questions 
+1. correlations between personal data (age, income, education) and responses to question Q46 
+2. correlations between questions Q20, Q22, and Q23.
+
+# Install and check for survey package
+```{r}
+if (!require(survey)) {
+  install.packages('survey')
+  require(survey)
+}
+```
+
+```{r install correlation plots}
+if (!require("corrplot")) install.packages("corrplot")
+```
+
+# Load the required libraries 
+```{r}
+
+library(foreign)
+library(survey)
+library(knitr)
+library(tidyverse)
+library(corrplot)
+```
+
+# Load the data file and convert it in to the csv file
+```{r}
+data <-read.spss("ATP W82.sav", to.data.frame = TRUE)
+names(data) <- tolower(names(data))
+View(data)
+```
+We can do some of our basic EDA analysis here.
+
+```{r}
+# View(data)
+dim(data)
+head(data)
+summary(data)
+```
+# Overview of the Data
+The analysis is based on survey data from the Pew Research Center, focusing on responses to question Q46.
+
+Q 46. Do you think it’s good or bad for U.S. colleges and universities to accept international 
+students? 
+
+It has 2 options 'good' and 'bad' however unanswered question can be considered as separate category 'rejected' 
+
+Q 20. Overall, do you think having people of many different backgrounds, such as different 
+ethnic groups, religions and races, makes the U.S. 
+
+It has 2 options 'a better place to live' and ' a worse place to live' and unanwered question can be considered as 'rejected' 
+
+Q 22. When it comes to important issues facing the U.S., people may disagree over policies, 
+but do you think most people
+
+It has 2 options 'Agree on the basic facts' and ' Disagree on the basic facts' and unanwered question can be considered as 'rejected' 
+
+Q 23. In the U.S., do you think discrimination against people based on their race or ethnicity is 
+a.
+
+It has 4 options 'Very serious problem', 'Somewhat serious problem', 'Not too serious problem', and 'Not a problem at all'  
+
+Initially Q 46 is analyzed w.r.t to the personnel data particularly age, education and income. 
+
+
+# 1. Use the table()function to see how factor variables are distributed.
+```{r age factor}
+table(data$f_agecat)
+```
+Clearly there are 5 categories in age namely '18-29', '30-49', '50-64', 65+ and refused
+```{r education factor}
+table(data$f_educcat)
+```
+Clearly there are 4 categories in education namely 'college graduate+', 'Some college H.S.', 'graduate or less', and refused
+
+```{r income}
+table(data$f_inc_tier2)
+```
+Income has 4 categories 'lower income', 'middle income','upper income'and 'refused' 
+
+# Including the weight variable in the responses
+
+The next step in analyzing the survey data is to use the svydesign ()
+function from R’s “survey” package to create a survey design object. We
+need to state the survey design to properly use survey weights and other
+design components for estimation.This will enable us to generalize to
+the overall U.S. population.
+
+```{r design object}
+w82_design = svydesign(
+  ids = ~0, #formula indicating there are no clusters  
+  data = data,      #this is the dataset 
+  weights = ~weight_w82) #this is the 'weight' variable
+```
+
+## Visualizations
+
+# 1. Bar Plot of age distribution by Q46
+
+```{r Q46 age plot}
+ggplot(data) +
+  geom_bar(aes(x = f_agecat, fill = factor(gap21q46_w82)), position = "stack") +
+  labs(title = "Age Distribution by Q46 Responses", x = "Age Category", y = "Count")
+```
+# Age Distribution Analysis (Q46)
+18-29 age group: Shows strongest support for international students with ~90% viewing it as "Good"
+30-49 age group: High support  ("Good") with largest response volume
+50-64 age and 65+ group: More divided views but still positive majority ("Good")
+Refusal rate: Minimal across all age groups 
+
+# 2. Bar Plot of education distribution by Q46
+```{r Q46 Education plot}
+ggplot(data) +
+  geom_bar(aes(x = f_educcat, fill = factor(gap21q46_w82)), position = "stack") +
+  labs(title = "Education Distribution by Q46 Responses", x = "Education category", y = "Count")
+```
+# Effect on Education Level (Q46)
+College graduates: Highest support for Good, likely due to direct exposure to international students
+Some College: Strong support for Good
+High School or less: More divided views for Good and Bad, but more inclined towards good
+
+Clear correlation: Higher education levels correspond to more positive views of international students
+
+#3. Bar plot of Income Distribution by Q46
+```{r Q46 Income plot}
+ggplot(data) +
+  geom_bar(aes(x = f_inc_tier2, fill = factor(gap21q46_w82)), position = "stack") +
+  labs(title = "Income Distribution by Q46 Responses", x = "Income category", y = "Count")
+```
+# Effect of income on Q46
+Lower income: Slightly more divided but still positive majority ("Good")
+Middle income: Largest response group, strongly positive ( "Good")
+Upper income: Most favorable views ("Good")
+
+Pattern: Higher income correlates with more positive views toward international students
+
+## Objective 2
+Correlation analysis of Q20, Q22 and Q 23
+```{r correlation}
+# Ensure numeric conversion
+q_correlation <- cor(data %>%
+                     select(gap21q20_w82, gap21q22_w82, gap21q23_w82) %>%
+                     mutate(across(everything(), as.numeric)), 
+                     use = "pairwise.complete.obs")
+
+# Generate a heatmap-style correlation plot
+corrplot(q_correlation, method = "color", col = colorRampPalette(c("blue", "white", "red"))(200),  
+         tl.cex = 1.2, # Text label size
+         number.cex = 1.2, # Number size
+         addCoef.col = "black") # Add correlation values in black
+```
+# Correlation Analysis (Q20, Q22, Q23)
+1. Q20-Q22 (0.06)
+Views on diversity making US better vs. agreement on basic facts
+Nearly zero correlation - these attitudes are independent
+
+2. Q20-Q23 (0.24)
+Views on diversity vs. perception of racial discrimination
+Weak positive correlation - slight tendency for those favoring diversity to see discrimination as more serious
+
+3. Q22-Q23 (-0.01)
+Agreement on basic facts vs. views on discrimination
+No correlation - completely independent views
+The correlation coefficients show these three social attitudes have minimal relationships with each other, suggesting they measure distinct aspects of public opinion.

@@ -1,0 +1,467 @@
+---
+title: "Assignment_Wk6_Saripalli"
+author: "Balaram"
+date: "2025-02-26"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
+## Assignment - 6
+  
+## Multiple Linear Regression (MLR)
+  
+# Question 
+Objective: Find the best multilinear regression model on predicting Total Purchases the Marketing.csv dataset
+  
+You must include:
+  
+1. Box plot and histogram of the dependent variable (Total Purchases)
+  
+2. A correlation plot of all the numerical variables
+  
+3. A MLR model that has at least one character variable summary, residual plots, and a VIF analysis
+  
+4. Comment in the R code a justification on why you removed, combined, or left all variables/observations.
+  
+5. A stepAIC analysis and AIC scores of all models in your Rfile.
+  
+6. Summary, residual plots, and a VIF analysis of the final best model you created.
+  
+7. A brief summary that includes:
+  
+  7a. An interpretation of the model and which variable is most positively correlated to your dependent         variable and which variable is most negatively correlated with the dependent variable.
+  7b. Are there variables currently not in the data set that may be beneficial to your analysis?
+        Submit an Rmd file and a knitted pdf file to the Assignment dropbox.
+        
+## Objejective
+Exploring Marketing.csv dataset to find the best multilinear regression model for predicting Total Purchases. We'll examine various aspects of the data, create visualizations, and build multiple regression models to identify the most significant predictors of customer purchasing behavior.
+  
+#Data Preparation and Exploration
+  
+load the necessary libraries
+  
+```{r load libraries}
+library(tidyverse)
+library(corrplot)
+library(car)
+library(MASS)
+```
+  
+Setting the working directory
+```{r working direct}
+setwd("F:/Balaram/Statcourse")
+```
+  
+Import and read the data set
+```{r load data}
+data <- read.csv("marketing.csv")
+```
+  
+Define a new variable total purchases, which is sum of total number of deal purchases, web purchases, catalog purchases, and store Purchases. 
+  
+```{r total purchases}
+data$TotalPurchases <- data$NumDealsPurchases + data$NumWebPurchases +
+data$NumCatalogPurchases + data$NumStorePurchases
+```
+  
+# Data preprocessing 
+```{r preprocessing}
+# Convert Income to numeric, removing $ and commas
+data$Income <- as.numeric(gsub("[$,]", "", data$Income))
+  
+# Convert Dt_Customer to Date type
+data$Dt_Customer <- as.Date(data$Dt_Customer, format="%m/%d/%Y")
+  
+# Calculate customer tenure in days
+data$CustomerTenure <- as.numeric(difftime("2025-02-26", data$Dt_Customer, units="days"))
+```
+  
+# 1. Box plot and histogram of the dependent variable (Total Purchases)
+Now, let's create a box plot and histogram of the dependent variable (Total Purchases):
+```{r plots}
+par(mfrow=c(1,2))
+
+# Box plot
+boxplot(data$TotalPurchases, main="Box Plot of Total Purchases", ylab="Total Purchases")
+  
+# Histogram
+hist(data$TotalPurchases, main="Histogram of Total Purchases", xlab="Total Purchases", breaks=30)
+```
+# Interpretation
+
+1. The box plot shows that Total Purchases has some outliers on the higher end. 
+  
+2. The histogram reveals a right-skewed distribution. This suggests that we might need to consider transforming the dependent variable or using robust regression techniques.
+ 
+# 2. A correlation plot of all the numerical variables 
+```{r corr matrix}
+# Select relevant numerical variables for correlation analysis
+num_vars <- c("Year_Birth", "Income", "Kidhome", "CustomerTenure", "MntWines",
+"MntFruits", "MntMeatProducts", "MntFishProducts", "MntSweetProducts",
+"MntGoldProds", "TotalPurchases")
+
+# Create a correlation matrix
+cor_matrix <- cor(data[, num_vars], use="complete.obs")
+  
+corrplot(cor_matrix, method="color", type="upper", order="hclust",
+tl.col="black", tl.srt=45, addCoef.col="black", number.cex=0.7)
+```
+
+# Interpretation 
+
+1. The correlation plot reveals strong positive correlations between Total Purchases and various product categories (e.g., MntWines, MntMeatProducts). 
+  
+2. There's also a moderate positive correlation with Income. 
+  
+3. These relationships suggest potential predictors for our model.
+  
+## 3. A MLR model that has at least one character variable summary, residual plots, and a VIF analysis
+
+Building the Initial MLR Model
+  
+Let's start with an initial model that includes both numerical and categorical variables:
+  
+```{r initial model}
+initial_model <- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure +
+MntWines + MntFruits + MntMeatProducts + MntFishProducts +
+MntSweetProducts + MntGoldProds + Education + Marital_Status, data=data)
+  
+summary(initial_model)
+  
+vif(initial_model)
+  
+par(mfrow=c(2,2))
+plot(initial_model)
+```
+# Interpretation
+
+The initial regression model was built to predict Total Purchases using a combination of numerical and categorical variables. Below is an interpretation of the model output:
+  
+**Key Outputs:**
+  
+1. **Residuals:** The residuals range from -21.21 to 30.38, indicating some variability in how well the model predicts Total Purchases for different observations.
+  
+2. The median residual is close to zero (-0.51), suggesting that the model does not systematically over- or under-predict.
+  
+**Coefficients:**
+  
+1. **Intercept:** The intercept is 53.22, representing the predicted Total Purchases when all predictors are zero. While this value may not be practically meaningful, it serves as a baseline.
+  
+2. **Year_Birth:** A negative coefficient (-0.03196) indicates that as the birth year increases (younger customers), Total Purchases decrease slightly. This suggests older customers tend to make more purchases.
+  
+3. **Income:** A positive coefficient (0.00003676) shows that higher income is associated with more purchases, though the effect size is small.
+  
+4. **Kidhome:** A negative coefficient (-0.7826) means households with more children at home tend to make fewer purchases.
+  
+5. **CustomerTenure:** A positive coefficient (0.003676) suggests that longer customer tenure is associated with slightly more purchases.
+  
+6. MntWines, MntMeatProducts, and other spending variables have strong positive coefficients, indicating that spending on specific categories correlates highly with Total Purchases.
+  
+7. **Education and Marital Status**: Most categories are not statistically significant predictors, as their p-values exceed 0.05.
+  
+**Statistical Significance:**
+  
+1. Variables like Year_Birth, Income, Kidhome, CustomerTenure, MntWines, and MntMeatProducts are highly significant (p < 0.001).
+  
+2. Spending on other categories (e.g., MntFruits, MntSweetProducts) also shows significance but with smaller effect sizes.
+  
+3. Categorical variables such as Education and Marital_Status generally lack statistical significance.
+  
+**Model Fit:**
+  
+1. R-squared (0.6255): The model explains about 62.55% of the variance in Total Purchases, which is reasonably strong for a consumer behavior dataset.
+  
+2. Adjusted R-squared (0.6219): Adjusted for the number of predictors, this value remains high, indicating a good fit without overfitting.
+  
+3. Residual Standard Error (4.717): This indicates the average deviation of observed values from predicted values.
+  
+**VIF Analysis:** All VIF values are below 5, suggesting no significant multicollinearity among predictors.
+  
+**Diagnostic Plots:**
+  
+1. Residuals vs Fitted Values: The plot shows a slight pattern, suggesting potential non-linearity or heteroscedasticity (non-constant variance of residuals).
+  
+2. Q-Q Plot: Residuals deviate from the diagonal line in the tails, indicating some non-normality in residuals.
+  
+3. Scale-Location Plot: The red line shows an upward trend, confirming heteroscedasticity.
+  
+4. Residuals vs Leverage: Some points have high leverage but do not exceed Cook's distance thresholds significantly.
+  
+  
+Although VIF values are low, spending variables like MntWines and MntMeatProducts may be highly correlated with each other and with Total Purchases. This could inflate their coefficients' significance. Categories like Education and Marital_Status have several non-significant levels (e.g., EducationPhD). These could be removed or combined to simplify the model without losing predictive power. The Scale-Location plot indicates non-constant variance in residuals, which could be addressed by transforming the dependent variable (e.g., log transformation) or using robust standard errors.
+High-leverage points should be investigated further to determine if they unduly influence the model.
+  
+# 4. Comment in the R code a justification on why you removed, combined, or left all variables/observations.
+
+Recommendations for Refinement:
+  
+1. Remove non-significant predictors like Education levels with high p-values.
+  
+2. Consider combining similar levels of categorical variables (e.g., Marital_Status).
+  
+3. Address heteroscedasticity through transformations or robust regression techniques.
+  
+4. Perform stepwise selection using AIC to identify a simpler model with better predictive power.
+  
+This analysis provides a strong foundation for refining the model further to improve its interpretability and predictive accuracy while addressing potential assumption violations like heteroscedasticity and outliers.
+
+# Refined model
+# Justification for variable selection:
+
+1. Removed individual product spending variables (MntWines, MntFruits, etc.) due to high multicollinearity
+
+2. Kept demographic variables (Year_Birth, Income, Kidhome, CustomerTenure) as they are fundamental predictors
+
+3. Kept Education and Marital_Status as categorical variables to capture potential group differences
+
+
+```{r refined model}
+refined_model <- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+                    Education + Marital_Status, data=data)
+
+# Perform stepAIC analysis
+step_model <- stepAIC(refined_model, direction="both")
+
+# Summary of the stepAIC model
+summary(step_model)
+
+# VIF analysis of the stepAIC model
+vif(step_model)
+
+# Residual plots
+par(mfrow=c(2,2))
+plot(step_model)
+
+# Final best model based on stepAIC results
+final_model <- lm(TotalPurchases ~ Income + Kidhome + CustomerTenure + 
+                  Education + Marital_Status, data=data)
+
+# Summary of the final model
+summary(final_model)
+
+# VIF analysis of the final model
+vif(final_model)
+
+# Residual plots of the final model
+par(mfrow=c(2,2))
+plot(final_model)
+
+```
+## Model Refinement
+
+To address the multicollinearity issues, we'll remove the individual product purchase variables and use only Income as our main numerical predictor. We'll keep the categorical variables and some demographic information:
+
+```{r refined}
+
+refined_model <- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure +
+Education + Marital_Status, data=data)
+
+summary(refined_model)
+
+vif(refined_model)
+
+par(mfrow=c(2,2))
+plot(refined_model)
+```
+
+
+# 5. A stepAIC analysis and AIC scores of all models in your Rfile.
+# StepAIC Analysis Results
+The goal of this analysis is to refine the model for predicting Total Purchases using stepwise selection (AIC) and evaluate the residual diagnostics. The stepAIC analysis suggested removing the Year_Birth variable from the model. This indicates that after accounting for other variables, the birth year doesn't significantly improve the model's predictive power.
+
+## Model Selection using StepAIC
+
+Let's use stepwise selection to find the best model:
+```{r best}
+step_model <- stepAIC(refined_model, direction="both")
+summary(step_model)
+```
+
+The stepwise selection process has removed Year_Birth from the model, suggesting it doesn't significantly improve the predictions.
+
+## Final Model
+
+Based on the stepAIC results, our final model is:
+
+```{r final}
+
+final_model <- lm(TotalPurchases ~ Income + Kidhome + CustomerTenure +
+Education + Marital_Status, data=data)
+
+summary(final_model)
+
+
+vif(final_model)
+
+
+par(mfrow=c(2,2))
+plot(final_model)
+```
+
+## Summary and Interpretation
+
+The final model explains approximately 28.15% of the variance in Total Purchases (R-squared = 0.2815). While this is not a high percentage, it's reasonable given the complexity of consumer behavior and the limited variables available.
+
+**Key findings:**
+
+1. Income is the most positively correlated variable with Total Purchases. For every $1,000 increase in income, the model predicts an increase of about 0.0266 in Total Purchases.
+
+2. The number of children at home (Kidhome) is the most negatively correlated variable. Each additional child is associated with a decrease of about 1.0355 in Total Purchases.
+
+3. Customer tenure has a small positive effect, with each additional day of tenure associated with an increase of about 0.0005 in Total Purchases.
+
+4. Education levels show some variation in their effect on Total Purchases, with PhD holders making slightly more purchases compared to the baseline (2n Cycle).
+
+5. Marital status also influences Total Purchases, with married customers making more purchases compared to the baseline (Absurd).
+
+The residual plots show some improvement over the initial model, but there's still evidence of non-linearity and heteroscedasticity. This suggests that there might be other factors influencing Total Purchases that are not captured in our current dataset.
+Here are the key interpretations based on the results:
+
+Stepwise AIC Analysis
+
+Initial Model:
+AIC = 7777.22: The initial model includes all predictors: Year_Birth, Income, Kidhome, CustomerTenure, Education, and Marital_Status.
+
+The stepwise process suggests removing Marital_Status first, as it does not significantly improve the model.
+
+Final Stepwise Model:
+AIC = 7766.72: The final model includes Year_Birth, Income, Kidhome, CustomerTenure, and Education.
+
+Removing Year_Birth or Education increases the AIC, indicating their inclusion improves the model's fit.
+
+**Final Models**
+Model 1: Without Marital_Status
+
+Adjusted R-squared = 0.4368: About 43.68% of the variance in Total Purchases is explained by this model.
+
+Significant Predictors:
+
+Income (p < 2e-16): Higher income leads to more purchases.
+
+Kidhome (p < 2e-16): More children at home are associated with fewer purchases.
+
+CustomerTenure (p < 2e-16): Longer tenure increases purchases.
+
+EducationBasic (p = 0.000443): Customers with basic education make significantly fewer purchases compared to the baseline (2n Cycle).
+
+Non-Significant Predictors:
+
+Year_Birth (p = 0.078): Marginally significant; older customers tend to make more purchases.
+
+Other education levels (Graduation, Master, PhD) are not significant.
+
+Model 2: With Marital_Status
+
+Adjusted R-squared = 0.4354: Similar explanatory power as Model 1.
+
+Adding Marital_Status does not improve the model significantly, as most levels are non-significant:
+
+All categories of Marital_Status have p-values > 0.55, indicating they do not contribute meaningfully to predicting Total Purchases.
+
+A slight pattern is observed, suggesting potential non-linearity or missing variables.
+
+
+**Key Interpretations**
+Most Positively Correlated Variable:
+
+Income has the largest positive effect on Total Purchases. For every unit increase in Income, Total Purchases increase by approximately 0.0001323 units, holding other variables constant.
+
+Most Negatively Correlated Variable:
+
+Kidhome has the largest negative effect on Total Purchases. Each additional child at home reduces Total Purchases by approximately 4.021 units, holding other variables constant.
+
+Other Significant Variables:
+
+CustomerTenure: Longer tenure is associated with higher purchases, but its effect size is small (0.007839 per day of tenure).
+
+Customers with basic education make fewer purchases compared to those with higher education levels.
+
+Non-Significant Predictors:
+
+Marital Status does not significantly influence Total Purchases in this dataset.
+
+Year of Birth is marginally significant but does not strongly impact purchases.
+
+**Recommendations for Improvement**
+Variable Selection: Remove non-significant predictors like most levels of Marital_Status and higher education categories (Graduation, Master, and PhD).
+
+Consider removing or transforming outliers like observation 528.
+
+Model Assumptions:
+
+Address heteroscedasticity by transforming the dependent variable (e.g., log transformation) or using robust regression techniques.
+
+Investigate potential non-linearity by adding interaction terms or polynomial terms for predictors like Income or CustomerTenure.
+
+Additional Variables:
+Variables not in the dataset that could improve predictions include:
+
+Customer age instead of Year_Birth for better interpretability.
+
+Geographic location or region.
+
+Lifestyle factors (e.g., hobbies, interests).
+
+Marketing campaign exposure and response rates.
+
+Online vs offline shopping preferences.
+
+Conclusion
+The final model with predictors (Income, Kidhome, CustomerTenure, and Education) explains approximately 44% of the variance in Total Purchases. While Income is the strongest positive predictor, Kidhome is the most negatively correlated variable. Further refinements could involve addressing residual issues and incorporating additional variables to improve predictive power and interpretability.
+
+The final model includes Income, Kidhome, CustomerTenure, Education, and Marital_Status as predictors of Total Purchases.
+
+
+# 6.Summary, residual plots, and a VIF analysis of the final best model you created.
+# Final Best Model Summary
+```{r best summary}
+summary(final_model)
+```
+VIF Analysis of Final Model
+```{r Vif}
+vif(final_model)
+```
+All VIF values are well below 5, indicating no significant multicollinearity issues in the final model.
+
+
+Residual Plots of Final Model
+
+
+# 7a. Interpretation of the model:
+
+The model explains approximately 28% of the variance in Total Purchases (R-squared ≈ 0.28).
+
+Income is the most positively correlated variable with Total Purchases. For every unit increase in Income, Total Purchases increase by about 0.0266 units.
+
+Kidhome (number of children at home) is the most negatively correlated variable. Each additional child is associated with a decrease of about 1.0355 in Total Purchases.
+
+CustomerTenure has a small positive effect, with each additional day of tenure associated with an increase of about 0.0005 in Total Purchases.
+
+Education levels show some variation in their effect on Total Purchases, with PhD holders making slightly more purchases compared to the baseline (2n Cycle).
+
+Marital status also influences Total Purchases, with married customers making more purchases compared to the baseline (Absurd).
+
+# 7b. Variables not in the dataset that may be beneficial to the analysis:
+Variables not in the dataset that could be beneficial to the analysis include:
+
+1. Customer age (instead of birth year)
+2. Specific product preferences or past purchase history
+3. Geographic location
+4. Occupation
+5. Lifestyle factors (e.g., hobbies, interests)
+6. Marketing campaign exposure and response
+
+Including these variables could potentially improve the model's predictive power and provide more insights into customer purchasing behavior.
+
+In conclusion, while the model provides some valuable insights into the factors influencing Total Purchases, there's still considerable room for improvement. Future analyses could explore non-linear relationships, interaction terms, or more advanced modeling techniques to better capture the complexities of consumer behavior.
+
+
+
+
+
+
+
+

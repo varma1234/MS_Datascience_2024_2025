@@ -1,0 +1,460 @@
+---
+title: "Assignment_Week1"
+output: pdf_document
+author: "Balaram Saripalli"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment
+
+Use the knowledge gained from the Lab and the Discussion Activity to
+complete the assignment. The marketing.csv data set was used in a
+statistical analysis course at Hult International Business School.
+
+*Perform descriptive statistics and visualizations as instructed in lab
+and discussion activities.* Anything else you may think will be relevant
+to analyzing this data set. *Provide a summary of your process and any
+insights you gathered through your analysis.* Turn in the R markdown and
+a knitted R markdown file as a pdf document of the assignment to the
+Week 1 dropbox. We will use this data set in future classes to perform
+more advanced statistical analyses.
+
+1.  Data Context
+
+The data set marketing_data.csv consists of 2,240 customers of XYZ
+company with data on:
+
+-   Customers: ID: Customer's unique identifier
+-   Year_Birth: Customer's birth year
+-   Education: Customer's education level
+-   Marital_Status: Customer's marital status
+-   Income: Customer's yearly household income
+-   Kidhome: Number of children in customer's household
+-   Dt_Customer: Date of customer's enrollment with the company
+-   Country: Customer's location
+
+Products:
+
+-   MntWines: Amount spent on wine in the last 2 years
+-   MntFruits:Amount spent on fruits in the last 2 years
+-   MntMeatProducts: Amount spent on meat in the last 2 years
+-   MntFishProducts: Amount spent on fish in thelast 2 years
+-   MntSweetProducts: Amount spent on sweets in the last 2 years
+
+Places:
+
+-   NumWebPurchases: Number of purchases made through the company's web
+    site
+-   NumCatalogPurchases: Number of purchases made using a catalogue
+-   NumStorePurchases: Number of purchases made directly in stores
+-   NumWebVisitsMonth: Number of visits to company's web site in the
+    last month
+
+Promotion: - NumDealsPurchases: Number of purchases made with a
+discount - Response: 1 if customer accepted the offer in the last
+campaign, 0 otherwise
+
+# Assignment Solution
+
+Initially the working directory need to be added, the path to you Rmd
+file folder need to be entered
+
+```{r working directory}
+# set working directory
+setwd("F:/Balaram/ML course")
+```
+
+Loading the required libraries useful for data visualization and
+analysis
+
+```{r loadlibraries}
+# load libraries
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(data.table)
+```
+
+Loading the data \# load data
+
+```{r read data}
+# load the data and save it as mydata
+mydata <- read_csv("marketing.csv",show_col_types = FALSE)
+```
+
+# convert to data.table
+
+```{r dataconversion}
+mydata <- data.table(mydata)
+```
+
+# check what you have with str
+
+use the str i.e., structure function to understand my data
+
+```{r structure of mydata}
+str(mydata)
+```
+
+# Details of basic structure
+
+The given data has 2,240 observations with 19 variables
+
+The descriptions of each variables and their datatypes are as follows:
+
+-   Customers: ID: Customer's unique identifier - num
+-   Year_Birth: Customer's birth year - num
+-   Education: Customer's education level - char (ordinal)
+-   Marital_Status: Customer's marital status - char (nominal)
+-   Income: Customer's yearly household income - num
+-   Kidhome: Number of children in customer's household - num
+-   Dt_Customer: Date of customer's enrollment with the company - chr
+    (Dates)
+-   Country: Customer's location - char (nominal)
+
+Products:
+
+-   MntWines: Amount spent on wine in the last 2 years - num
+-   MntFruits:Amount spent on fruits in the last 2 years - num
+-   MntMeatProducts: Amount spent on meat in the last 2 years - num
+-   MntFishProducts: Amount spent on fish in thelast 2 years - num
+-   MntSweetProducts: Amount spent on sweets in the last 2 years - num
+
+Places:
+
+-   NumWebPurchases: Number of purchases made through the company's web
+    site - num
+-   NumCatalogPurchases: Number of purchases made using a catalogue -
+    num
+-   NumStorePurchases: Number of purchases made directly in stores - num
+-   NumWebVisitsMonth: Number of visits to company's web site in the
+    last month - num
+
+Promotion: - NumDealsPurchases: Number of purchases made with a
+discount - Response: 1 if customer accepted the offer in the last
+campaign, 0 otherwise - num (ordinal - encoded)
+
+# use summary() to get descriptive statistics on the data set
+
+```{r datasummary}
+summary(mydata)
+View(mydata)
+# You can use summary for the entire data set to know the entire summary or individual columns summary or min, max etc values can be used
+```
+
+Observations: - ID is just a numerical variable which just a unique
+representation each customer which is a random number and thus not
+useful for analysis - The customers are ranged from the people who are
+born from 1893 to 1996.
+
+# show the first 6 rows of data with column names
+
+```{r dataview}
+head(mydata)
+```
+
+# find how many countries are represented in the data
+
+```{r no of countries}
+# as countries are repeated here and not a unique values we need to count the no of unique values
+unique_countries <- unique(mydata$Country)
+# Just to see what are the countries to cross verify
+unique_countries
+no_countries <- length(unique_countries)
+cat("no of countries represented in the data are:", no_countries, "\n")
+
+```
+
+# can you sort by the name of the country?
+
+```{r sort by country}
+# We are using order function to sort by country and store that data as mydata1
+mydata1 <- mydata[order(Country),]
+# view the updated data 
+View(mydata1)
+```
+
+# find mean and sd of in-store purchases in the US
+
+```{r instore us}
+# filter the data that is taken from us and the find the mean and SD of in-store purchases
+# mean
+Mean_US_instore <- mean(mydata$NumStorePurchases[mydata$Country == 'US']) 
+# Standard deviation
+SD_US_instore <- sd(mydata$NumStorePurchases[mydata$Country == 'US'])
+
+# Print the values clearly
+cat("Mean of in-store purchanes in US are:", Mean_US_instore, "\n")
+cat("Standard deviation of in-store purchanes in US are:", SD_US_instore, "\n")
+```
+
+Before you can plot a histogram for income, you'll need to remove the
+dollar signs from the column.
+
+```{r clean income }
+mydata$Income <- parse_number(mydata$Income)
+options(scipen = 9999)
+```
+
+Set scipen to a higher value, so you can avoid numbers being displayed
+in scientific notation.
+
+```{r}
+options(scipen=999)
+```
+
+# histogram of Income
+
+```{r Income histogram}
+ggplot(mydata, aes(x = Income)) + 
+  geom_histogram(binwidth = 3500, fill = "lightblue", color = "black") +
+  theme_minimal() +
+  scale_x_continuous(labels = scales::dollar_format()) +
+  labs(title = "Histogram of Income", x = "Income (in dollars)", y = "Frequency")
+```
+
+We have somemissing values in the data and are ignored while doing the
+histograms Onservation: - Clearly more data is distributed between the
+0\$ an the 170,000$, and rest can be considered as outliers
+```{r filtered histogram}
+# we just removed the datapoints where icome is NA or > 200,000$ for better visualization
+# Filtered Histogram of Income (NA removed and Income <= $200,000)
+filtered_data <- mydata %>% 
+  dplyr::filter(!is.na(Income) & Income <= 200000)
+
+ggplot(filtered_data, aes(x = Income)) + 
+  geom_histogram(binwidth = 2000, fill = "steelblue", color = "black") +
+  theme_minimal() +
+  scale_x_continuous(labels = scales::dollar_format()) +
+  labs(title = "Filtered Histogram of Income", x = "Income (in dollars)", y = "Frequency")
+```
+Observation: most of the coustomers are in the range of income lies between 1,700$
+to 100,000\$
+
+# boxplot of Amount of Sweet Products
+
+```{r Sweets boxplot}
+boxplot(mydata$`MntSweetProducts`, col='green', main='Boxplot of Amount spent on Sweet products for 2 years (in $)', xlab = 'Amount spent on sweets')
+
+```
+
+# which country is has the highest amount of wine consumed?
+
+order plot by country with the highest wine consumption. You may use
+factor() function to be able to display amounts in a desirable
+order.Note: this is slightly different from the solution in the
+discussion activity.
+
+```{r wine consumption by country}
+# Country with Highest Wine Consumption
+wine_by_country <- mydata %>% 
+  group_by(Country) %>% 
+  summarize(TotalWine = sum(MntWines, na.rm = TRUE)) %>% 
+  arrange(desc(TotalWine)) %>% 
+  mutate(Country = factor(Country, levels = Country))
+
+ggplot(wine_by_country, aes(x = Country, y = TotalWine)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Total Wine Consumption by Country", x = "Country", y = "Total Wine Consumption")
+```
+
+Observation: country 'SP' i.e., Spain has highest total wine
+consumption, where as 'ME' i.e., middle east countries have lowest wine
+consumption
+
+You may want to combine the Number of Store purchases, number of web
+purchases, and number of catalog purchases into a total number of
+purchases column to be used later in analysis stages.
+
+```{r total purchases}
+#create totalpsum variable
+mydata <- mydata %>% 
+  mutate(TotalPurchases = NumStorePurchases + NumWebPurchases + NumCatalogPurchases)
+summary(mydata$TotalPurchases)
+View(mydata)
+#total purchases variable is also added in the data
+```
+
+## Take a look at the education variable and see what it looks like.
+
+```{r education}
+education_summary <- mydata %>% 
+  group_by(Education) %>% 
+  summarize(Count = n())
+ggplot(education_summary, aes(x = reorder(Education, Count), y = Count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Education Levels in Dataset", x = "Education Level", y = "Count")
+
+```
+
+Observation: Most of the customers are having higher eductations like
+Master, PhD and graduation. The people whas graduation are more likely
+to cosume products in the company
+
+Feel free to explore other variables that could be interesting to your
+analysis!
+
+# Effect of Discounts on Total Purchases
+
+```{r Discounts}
+# Create a scatter plot of NumDealsPurchases vs TotalPurchases
+ggplot(mydata, aes(x = NumDealsPurchases, y = TotalPurchases)) + 
+  geom_point(color = "steelblue", alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  theme_minimal() +
+  labs(title = "Effect of Discounts on Total Purchases", 
+       x = "Number of Discount Purchases", 
+       y = "Total Purchases")
+
+# Correlation between NumDealsPurchases and TotalPurchases
+correlation <- cor(mydata$NumDealsPurchases, mydata$TotalPurchases, use = "complete.obs")
+correlation
+```
+
+#Effect of no of kids on purchases
+
+```{r kids}
+kids_effect <- mydata %>% 
+  group_by(Kidhome) %>% 
+  summarize(AveragePurchases = mean(TotalPurchases, na.rm = TRUE),
+            Wine = mean(MntWines, na.rm = TRUE),
+            Meat = mean(MntMeatProducts, na.rm = TRUE),
+            Fish = mean(MntFishProducts, na.rm = TRUE),
+            Fruits = mean(MntFruits, na.rm = TRUE),
+            Sweets = mean(MntSweetProducts, na.rm = TRUE),
+            Gold= mean(MntGoldProds, na.rm = TRUE))
+
+ggplot(kids_effect, aes(x = Kidhome, y = AveragePurchases)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Effect of Number of Kids on Purchases", x = "Number of Kids", y = "Average Total Purchases")
+```
+
+Observation: Average total purchages are more or the customers who
+doestnt have kids
+
+#Country wise fruits consumption
+
+```{r country vs pdt}
+# Country with Highest Wine Consumption
+fruits_by_country <- mydata %>% 
+  group_by(Country) %>% 
+  summarize(Totalfruits = sum(MntFruits, na.rm = TRUE)) %>% 
+  arrange(desc(Totalfruits)) %>% 
+  mutate(Country = factor(Country, levels = Country))
+
+ggplot(fruits_by_country, aes(x = Country, y = Totalfruits)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Total fruits Consumption by Country", x = "Country", y = "Total fruits Consumption")
+
+```
+
+Observation: 'Sp' hasmore fruits consumption and ME has the lowest also,
+clearly ME has very less total consumpytions as well
+
+# effect of country on total consumptions
+
+```{r Country cons}
+Country_effectpdt <- mydata %>% 
+  group_by(Country) %>% 
+  summarize(AveragePurchases = mean(TotalPurchases, na.rm = TRUE),
+            Wine = mean(MntWines, na.rm = TRUE),
+            Meat = mean(MntMeatProducts, na.rm = TRUE),
+            Fish = mean(MntFishProducts, na.rm = TRUE),
+            Fruits = mean(MntFruits, na.rm = TRUE),
+            Sweets = mean(MntSweetProducts, na.rm = TRUE),
+            Gold= mean(MntGoldProds, na.rm = TRUE))
+
+ggplot(Country_effectpdt, aes(x = Country, y = AveragePurchases)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Effect of country on total Purchases", x = "Country", y = "Average Total Purchases")
+```
+
+Observation: Average total purchases is more in 'ME' countries
+
+# be sure to save your data frame to a csv file for future use.
+
+```{r}
+library(data.table)
+# Write ro CSV
+
+#Or use this as this is much more elegant!
+fwrite(mydata, "Marketingdata.csv")
+```
+
+Provide a summary of your process and any insights you gathered through
+your analysis with this data set. #summary of process In this assignment
+the marketing data was analyzed to understand the basic trends. We have
+initially loaded the data looked at the data and see what are all
+numerical features and what are characters or categorical features. The
+structure of the data and basic statistical summary is analyzed
+initially. Then we went in to little detailed information on how many
+countries were there as therae repetitions no of countries taken were
+found out. then we did simple mean and SD caluculations of Specific
+feature like in store purchases for a given country. The data was
+cleaned such as removal of \$ from income so that it can be changed to
+numeric and helpful for analysis. Basic visualization like barchart,
+histogram and box plots were drawn in order to understand the trend /
+distribution of data. Created a new variable called Total purchases
+which includes purchases from instore, web and cataloge. we also
+analyzed the effect of discount on prchases and distribution of
+education in customers etc..
+
+# Insights
+
+-   Data: Marketing data , 2240 data points
+
+-   ID is just a numerical variable which just a unique representation
+    each customer which is a random number and thus not useful for
+    analysis
+
+-   The customers are ranged from the people who are born from 1893
+    to 1996.
+
+-   The data consists of 19 features to understand the marketinng of a
+    company
+
+-   no of countries represented in the data are: 8
+
+-   The countries are SP (spain), CA (Canada), US(United states), AUS
+    (Australia), GER (Geremany),IND (India), SA (south africa) and ME
+    (Middle east)
+
+-   Mean of in-store purchanes in US are: 6.036697
+
+-   Standard deviation of in-store purchanes in US are: 3.360794
+
+-   most of the coustomers are in the range of income lies between
+    1,700\$ to 100,000\$
+
+-   There is a skewness on the amont spent on sweets - country 'SP'
+    i.e., Spain has highest total wine consumption, where as 'ME' i.e.,
+    middle east countries have lowest wine consumption
+
+-    Most of the customers are having higher eductations like Master,
+    PhD and graduation.
+
+-   The people whas graduation are more likely to cosume products in the
+    company
+
+-   There is no major effect of discounts on the total no of purchases
+
+-    Average total purchages are more or the customers who doestnt have
+    kids
+
+-   'Sp' hasmore fruitsconsumption and ME has the lowest also, clearly
+    ME has very less total consumptions as well
+
+-   Average total purchases is more in 'ME' countries

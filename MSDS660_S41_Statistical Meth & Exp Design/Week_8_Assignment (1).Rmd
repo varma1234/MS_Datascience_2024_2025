@@ -1,0 +1,501 @@
+---
+title: "Week_8_HW"
+output: html_document
+date: "2025-03-04"
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Ensure these libraries are installed earlier else use the below code
+# install.packages("Package name eg:BDSA")
+
+# Import all the required libraries
+library(data.table)
+library(BSDA)
+library(agricolae)
+library(nortest)
+
+```
+
+# Setting the working directory
+```{r working direct}
+setwd("F:/Balaram/Statcourse")
+```
+
+# Homework Week 8
+
+### 1. Flu shot problem
+
+Is there a significant difference in median flu antibodies detected with the new flu vaccine?
+
+-   Consider the following questions and apply the appropriate statistical test:
+    -   Are they from a normal distribution?
+    -   Are the data paired or unpaired?
+    -   Will you use a one sided or two sided test?
+    -   Which test will you use?
+
+```{r}
+# Load the flu_shot.csv data:
+flu <- fread('new_flu_shot.csv')
+
+# View the structure of the data
+str(flu)
+
+# Convert the 'undetectable to a 0 and convert column to numeric
+flu$new.vaccine[flu$new.vaccine == "undetectable"] <- 0
+flu$new.vaccine <- as.numeric(flu$new.vaccine)
+
+# View structure again to confirm:
+str(flu)
+
+# Box plot the data
+boxplot(flu$old.vaccine, flu$new.vaccine)
+
+# Plot the density distribution
+plot(density(flu$old.vaccine), col = 'blue')
+lines(density(flu$new.vaccine), col = 'red')
+
+# Use the Shapiro-Wilks test to see if they are from a normal distribution
+shapiro.test(flu$old.vaccine)
+shapiro.test(flu$new.vaccine)
+
+# Apply the appropriate statistical test to answer the research question.
+```
+
+# Explanation and Interpretation of Results
+
+1. **Shapiro-Wilk Normality Test** The Shapiro-Wilk test checks whether the data follows a normal distribution. Here are the results for flu$old.vaccine:
+
+W = 0.81865, p-value = 0.006443
+
+H0: The null hypothesis (H₀) of the Shapiro-Wilk test is that the data comes from a normal distribution.
+
+- Since the p-value is less than 0.05, we reject the null hypothesis. This indicates that the old.vaccine data does not follow a normal distribution.
+
+- For flu$new.vaccine, we would also run a Shapiro-Wilk test to confirm its distribution.
+
+**Box Plot and Density Plot Observations**
+
+1. The box plot shows the spread of flu antibody levels for both old.vaccine and new.vaccine. It appears that the median antibody levels for the new vaccine are lower than those for the old vaccine.
+
+2. The density plot shows that the distributions of antibody levels for both vaccines are not symmetric, further supporting non-normality.
+
+**Conclusion from Normality Test** Since at least one dataset (old.vaccine) is not normally distributed, we need to use a non-parametric statistical test to compare the two groups.
+
+**Question: Is there a significant difference in median flu antibodies detected with the new flu vaccine? Determine if Paired or Unpaired Data**
+
+**1. Determine Paired or Unpaired Data**
+The data consists of flu antibody levels measured from the same individuals for both vaccines (old.vaccine and new.vaccine). Therefore, the data is paired.
+
+**2. Choose Test Type**
+We are interested in determining if there is a significant difference in median flu antibodies between the old and new vaccines. A one-sided test is appropriate if we expect one vaccine to produce higher antibody levels than the other. Otherwise, we use a two-sided test to check for any difference in medians.
+
+**3. Apply Statistical Test**
+Since the data is paired and not normally distributed, we will use the Wilcoxon Signed-Rank Test, which is a non-parametric alternative to the paired t-test.
+
+```{r wilcoxon test}
+
+# Apply Wilcoxon Signed-Rank Test (Paired Data)
+wilcox_test <- wilcox.test(x = flu$old.vaccine, y = flu$new.vaccine,
+                           paired = TRUE, alternative = "two.sided")
+
+# Print Wilcoxon Signed-Rank Test results
+print(wilcox_test)
+
+```
+# Wilcoxon Signed-Rank Test:
+
+1. The null hypothesis (H₀) is that there is no difference in median antibody levels between the old and new vaccines.
+
+2. If p-value < 0.05, we reject H₀ and conclude that there is a significant difference in median antibody levels between the two vaccines. 
+
+3. If using a one-sided test (e.g., alternative = "greater"), it tests whether median antibody levels for the old vaccine are significantly greater than those for the new vaccine.
+
+# Wilcoxon Signed-Rank Test Output
+
+1. Warning: cannot compute exact p-value with ties: This warning occurs because there are tied values in the data (e.g., identical values in old.vaccine and new.vaccine). The Wilcoxon test uses ranks, and ties make it impossible to compute exact ranks. Instead, the test uses an approximation.
+
+2. V = 68.5: This is the test statistic from the Wilcoxon signed-rank test.
+
+3. p-value = 0.6495: The p-value is greater than 0.05, so we fail to reject the null hypothesis.
+
+4. Alternative hypothesis: true location shift is not equal to 0: This means the test was two-sided, checking for any difference (increase or decrease) in median antibody levels between the old and new vaccines.
+
+# Conclusion
+The p-value of 0.6495 indicates that there is no statistically significant difference in median flu antibody levels between the old and new vaccines based on this dataset.
+
+
+
+ Japanese Car Problem
+------------------------------------------------------------------------
+
+Is there a difference in median mpg between Japanese and US cars?
+
+-   Consider the following questions and apply the appropriate statistical test:
+    -   Are they from a normal distribution?
+    -   Are the data paired or unpaired?
+    -   Will you use a one sided or two sided test?
+    -   Which test will you use?
+
+```{r japanes car problem}
+
+# Load the mpg.csv data:
+mpg <- fread('mpg.csv')
+
+# we have the missing value and hence remove rows with missing values
+mpg <- mpg[mpg$US_Car_MPG != -999 & mpg$Japanese_Car_MPG != -999, ]
+
+# View the structure
+str(mpg)
+
+# View a summary of the data
+summary(mpg)
+
+# View box plot of the data
+boxplot(mpg$US_Car_MPG, mpg$Japanese_Car_MPG,
+        names = c("US Cars", "Japanese Cars"),
+        main = "Comparison of MPG",
+        col = c("lightblue", "lightgreen"),
+        ylab = "MPG")
+
+# Plot the density distribution.
+plot(density(mpg$US_Car_MPG), col = 'blue', lwd = 2,
+     main = "Density Plot of MPG",
+     xlab = "MPG")
+lines(density(mpg$Japanese_Car_MPG), col = 'green', lwd = 2)
+legend("topright", legend = c("US Cars", "Japanese Cars"),
+       col = c("blue", "green"), lwd = 2)
+
+# Create a US data set from the V1 data and a Japanese data set from the V2 data
+us_cars <- mpg$US_Car_MPG
+japanese_cars <- mpg$Japanese_Car_MPG
+
+# Remove outliers
+# Function to calculate Z-scores
+calculate_z_scores <- function(data) {
+    mean_val <- mean(data, na.rm = TRUE)
+    sd_val <- sd(data, na.rm = TRUE)
+    z_scores <- (data - mean_val) / sd_val
+    return(z_scores)
+}
+
+# Calculate Z-scores for US and Japanese cars
+us_z_scores <- calculate_z_scores(us_cars)
+jp_z_scores <- calculate_z_scores(japanese_cars)
+
+# Remove outliers based on Z-scores
+us_cars_filtered <- us_cars[abs(us_z_scores) < 2]
+jp_cars_filtered <- japanese_cars[abs(jp_z_scores) < 2]
+
+# Use the Shapiro-Wilks test to see if they are from a normal distribution
+# Perform Shapiro-Wilk test for normality
+shapiro_us <- shapiro.test(us_cars)
+shapiro_jp <- shapiro.test(japanese_cars)
+
+# Print results
+print(shapiro_us)
+print(shapiro_jp)
+
+# Apply the appropriate statistical test to answer the research question.
+
+```
+#Interpretation of Results
+
+**1.Shapiro-Wilk Normality Test Results**
+
+- US Cars (W = 0.90891, p-value = 3.293e-05): The p-value is much smaller than 0.05, indicating that the mpg data for US cars does not follow a normal distribution.
+
+- Japanese Cars (W = 0.97676, p-value = 0.1586): The p-value is greater than 0.05, indicating that the mpg data for Japanese cars follows a normal distribution.
+
+**2. Box Plot and Density Plot Observations**
+
+From the box plot:Japanese cars generally have higher mpg values compared to US cars.
+
+- There are some outliers in both groups.
+
+From the density plot: The distributions of mpg for US and Japanese cars differ significantly.
+
+- US cars have a left-skewed distribution with lower mpg values, while Japanese cars have a more symmetric distribution with higher mpg values.
+
+# Is there a difference in median mpg between Japanese and US cars?
+
+1. check for Paired or Unpaired data: 
+The data are unpaired because the mpg values for US and Japanese cars are from different groups of vehicles.
+
+2. Selection of suitable test: Since the data for US cars is not normally distributed, we will use a non-parametric test.
+
+The appropriate test for comparing two unpaired groups is the **Mann-Whitney U-test (also known as the Wilcoxon rank-sum test)**.
+
+# Mann-whitney U-test
+```{r mann_whitney U-test}
+# Apply Mann-Whitney U-test (Unpaired Data)
+mw_test <- wilcox.test(x = us_cars, y = japanese_cars, alternative = "two.sided", exact = FALSE)
+
+# Print results
+print(mw_test)
+```
+**Mann-Whitney U-Test Results**
+Null Hypothesis (H₀): There is no difference in median mpg between US and Japanese cars.
+
+Alternative Hypothesis (Hₐ): There is a difference in median mpg between US and Japanese cars.
+
+If the p-value is less than 0.05, we reject H₀ and conclude that there is a significant difference in median mpg between the two groups.
+
+**Mann-Whitney U-Test Test Results**
+
+- Test Statistic (W = 186.5): This is the rank sum test statistic.
+
+- p-value < 2.2e-16: The p-value is extremely small, much less than the significance level of 0.05.
+
+- Alternative Hypothesis: The true location shift (difference in medians) is not equal to zero.
+
+**Explanation**
+The Shapiro-Wilk test results indicate that the data for US cars is not normally distributed, while Japanese cars follow a normal distribution. Hence, using a non-parametric test like the Wilcoxon Rank Sum Test (Mann-Whitney U-test) is appropriate.
+
+- Mann-Whitney U-Test Test confirms that there is a statistically significant difference in median mpg between US and Japanese cars (p< 0.05). The extremely small p-value suggests that this difference is highly significant and unlikely to be due to random chance.
+
+**Conclusion**
+
+Based on the statistical and visual analyses:
+
+1. Median Comparison: Japanese cars have significantly higher median mpg compared to US cars.
+
+2. Distribution Differences: The distributions of mpg values for US and Japanese cars are distinct, as shown by density plots and box plots.
+
+3. Statistical Significance: The Mann-Whitney U-Test Test confirms that the difference in median mpg between US and Japanese cars is highly significant (p<0.05).
+
+Thus, we conclude that Japanese cars are more fuel-efficient on average than US cars based on their higher median miles per gallon (mpg).
+
+
+------------------------------------------------------------------------
+
+## Vocab training problem
+
+Does vocab training significantly improve median test scores?
+
+-   Consider the following questions and apply the appropriate statistical test:
+    -   Are they from a normal distribution?
+    -   Are the data paired or unpaired?
+    -   Will you use a one sided or two sided test?
+    -   Which test will you use?
+
+```{r Vocab training}
+# Load the vocab.csv data:
+vocab <- fread('vocab.csv')
+
+# View the structure of the data
+str(vocab)
+
+# View box plot of the data
+boxplot(vocab$before.training, vocab$after.training,
+        names = c("Pre-Training", "Post-Training"),
+        main = "Comparison of Vocabulary Test Scores",
+        col = c("lightblue", "lightgreen"),
+        ylab = "Test Scores")
+
+# Plot the density distribution.
+plot(density(vocab$before.training), col = 'blue', lwd = 2,
+     main = "Density Plot of Vocabulary Test Scores",
+     xlab = "Test Scores")
+lines(density(vocab$after.training), col = 'green', lwd = 2)
+legend("topright", legend = c("Pre-Training", "Post-Training"),
+       col = c("blue", "green"), lwd = 2)
+
+# Use the Shapiro-Wilks  test to see if they are from a normal distribution
+# Perform Shapiro-Wilk test for normality
+shapiro_before <- shapiro.test(vocab$before.training)
+shapiro_after <- shapiro.test(vocab$after.training)
+
+# Print results
+print(shapiro_before)
+print(shapiro_after)
+
+# Apply the appropriate statistical test to answer the research question.
+
+```
+# Interpretation
+
+1. **Shapiro-Wilk Normality Test Results:** Pre-Training Scores (W = 0.98413, p-value = 0.9921):
+
+- The p-value is much greater than 0.05, indicating that the pre-training test scores are normally distributed.
+
+- Post-Training Scores (W = 0.94602, p-value = 0.5009):
+
+- The p-value is also greater than 0.05, indicating that the post-training test scores are normally distributed.
+
+2. **Box Plot Observations**
+
+- The box plot shows that the median score increases after training, with the post-training group having a higher median compared to the pre-training group.
+
+- The variability in scores (as indicated by the interquartile range) is similar between the two groups.
+
+- There are no extreme outliers in either group.
+
+3. **Density Plot Observations**
+
+- The density plot shows a shift in the distribution of scores after training, with post-training scores being centered around higher values compared to pre-training scores.
+
+- This visual evidence suggests an improvement in test scores after training.
+
+**Does vocab training significantly improve median test scores?**
+
+1. Data pairing: The data are paired, as pre-training and post-training scores are from the same individuals.
+
+2.**Statistical Testing** Since both groups are normally distributed and paired, we can use a parametric test like the paired t-test to determine if there is a significant improvement in median test scores after training. 
+
+Alternatively, we can use the Wilcoxon Signed-Rank Test for robustness.
+
+**Paired t-Test**
+```{r pair t}
+# Apply paired t-test
+t_test <- t.test(x = vocab$before.training, y = vocab$after.training,
+                 paired = TRUE, alternative = "greater")
+
+# Print results
+print(t_test)
+```
+**Interpretation**
+- Test Statistic (t = -2.2958): This is the calculated t-value for the paired t-test.
+
+- p-value = 0.9805: The p-value is much greater than 0.05, meaning we fail to reject the null hypothesis.
+
+- Mean Difference (-3.857143): The mean difference between pre-training and post-training scores is negative, indicating that post-training scores are slightly lower on average.
+
+
+**Wilcoxon Signed-Rank Test**
+```{r wil_Signtest}
+# Apply Wilcoxon Signed-Rank Test (Paired Data)
+wilcox_test <- wilcox.test(x = vocab$before.training, y = vocab$after.training,
+                           paired = TRUE, alternative = "greater")
+
+# Print results
+print(wilcox_test)
+```
+**Interpretation**
+
+- Test Statistic (V = 24): This is the rank sum statistic for the Wilcoxon Signed-Rank Test.
+
+- p-value = 0.9661: The p-value is much greater than 0.05, meaning we fail to reject the null hypothesis.
+
+- Warning: The warning indicates that there are ties in the data, which makes it impossible to compute an exact p-value.
+
+# Conclusion
+
+Based on the statistical tests and visualizations:
+
+1. Both the paired t-test and Wilcoxon Signed-Rank Test fail to reject the null hypothesis ($p > 0.05$).
+
+2. There is no statistically significant evidence to suggest that vocabulary training improves test scores.
+
+3. Visualizations (box plot and density plot) support this conclusion, showing overlapping distributions and similar medians for pre-training and post-training scores.
+
+4. The paired t-test does not provide evidence that vocabulary training significantly improves test scores.
+
+5. The Wilcoxon Signed-Rank Test also does not provide evidence that vocabulary training significantly improves test scores.
+
+Vocabulary training does not appear to significantly improve median test scores based on this dataset and analysis.
+------------------------------------------------------------------------
+
+## McDonald's menu problem
+
+Is there a significant difference in salt in the menu items?
+
+-   Consider the following questions and apply the appropriate statistical test:
+    -   Are they from a normal distribution?
+    -   Are the data paired or unpaired?
+    -   Will you use a one sided or two sided test?
+    -   Which test will you use?
+
+```{r McD menu}
+
+# Load the menu.csv data
+menu <- fread('menu.csv')
+
+# View the structure of the data
+str(menu)
+
+# View box plot of sodium vs the category
+boxplot(menu$Sodium ~ menu$Category,
+        main = "Comparison of Sodium Content by Category",
+        col = c("lightblue", "lightgreen", "lightyellow", "lightgray"),
+        ylab = "Sodium (mg)")
+
+# Use the Shapiro-Wilks test to see if the sodium content in each categories are from a normal distribution.
+categories <- unique(menu$Category)
+for (cat in categories) {
+    sodium_data <- menu[menu$Category == cat, Sodium]
+    shapiro_test <- shapiro.test(sodium_data)
+    cat("Shapiro-Wilk Test for", cat, ":\n")
+    print(shapiro_test)
+}
+
+# Apply the appropriate statistical test to answer the research question.
+
+```
+**Interpretation of Shapiro-Wilk Normality Test Results**
+
+The Shapiro-Wilk test checks whether the data follows a normal distribution. Here's the interpretation of the results for sodium content across menu categories:
+
+1. **Beef & Pork (W = 0.89622, p-value = 0.3087):** The p-value is greater than 0.05, indicating that the sodium content in the "Beef & Pork" category is normally distributed.
+
+2. **Beverages (W = 0.85312, p-value = 0.001329):** The p-value is less than 0.05, indicating that the sodium content in the "Beverages" category is not normally distributed.
+
+3. **Coffee & Tea (W = 0.95984, p-value = 0.00528):** The p-value is less than 0.05, indicating that the sodium content in the "Coffee & Tea" category is not normally distributed.
+
+4. **Smoothies & Shakes (W = 0.92352, p-value = 0.0424):** The p-value is less than 0.05, indicating that the sodium content in the "Smoothies & Shakes" category is not normally distributed.
+
+
+Since several categories (e.g., "Beverages," "Coffee & Tea," and "Smoothies & Shakes") do not follow a normal distribution (p-value < 0.05), we cannot use parametric tests like ANOVA to compare sodium content across categories.
+
+Instead, we will use a non-parametric test like the Kruskal-Wallis H-test to determine if there are significant differences in sodium content among the menu categories.
+
+# Is there a significant difference in salt in the menu items?
+
+**Kruskal-Wallis H-Test**
+The Kruskal-Wallis H-test is a non-parametric alternative to ANOVA and can be used to compare medians across multiple groups when data are not normally distributed.
+
+```{r mcD menu}
+# Perform Kruskal-Wallis H-test
+kruskal_test <- kruskal.test(Sodium ~ Category, data = menu)
+
+# Print results
+print(kruskal_test)
+```
+# Interpretation: Test Statistic (chi-squared = 183.42):
+This is the test statistic for the Kruskal-Wallis H-test, which measures differences in median sodium content across menu categories.
+
+- Degrees of Freedom (df = 8):
+
+- There are 9 categories in total (one less than the number of groups).
+
+- p-value < 2.2e-16:
+
+- The p-value is extremely small (much less than 0.05), indicating that there is a statistically significant difference in sodium content among the menu categories.
+
+
+# **Conclusion:**
+
+We reject the null hypothesis, which states that all categories have the same median sodium content.
+
+At least one category has a significantly different median sodium content compared to others.
+
+The box plot provides visual evidence of variability in sodium content across menu categories:
+
+    1. Beef & Pork: Relatively high median sodium content.
+    
+    2. Narrow interquartile range (IQR), indicating less variability in sodium levels.
+    
+    3. Breakfast: Higher median sodium content compared to most other categories.  Some extreme outliers with very high sodium levels.
+    
+    4. Coffee & Tea and Smoothies & Shakes: Very low sodium content with minimal variability.
+    
+    5. Snacks & Sides and Salads: Moderate sodium levels with wider variability.
+    
+There are significant differences in median sodium content among McDonald's menu categories (p < 0.05). Categories like "Breakfast" and "Beef & Pork" have significantly higher sodium levels, suggesting that customers looking to reduce their sodium intake should consider items from lower-sodium categories such as "Coffee & Tea" or "Smoothies & Shakes."
+
+
+

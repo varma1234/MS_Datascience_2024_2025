@@ -1,0 +1,676 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Assignment_WK2_plotting</h1>
+<h4 class="author">Balaram Saripalli</h4>
+<h4 class="date">2025-01-28</h4>
+
+</div>
+
+
+<div class="section level1">
+<h1>Question:</h1>
+<p>Use the marketing data set from last week. Explore the relationships
+between at least 8 variables (if not all of them). One of the variables
+must be Response column.When exploring relationships you must produce at
+least 8 plots and at least one histogram plot, box plot, and scatter
+plot.</p>
+<ul>
+<li>A brief explanation of your analysis process and your interpretation
+of the data.</li>
+</ul>
+<p>-Remember, you want to know why customers responded to your marketing
+campaign.</p>
+<ul>
+<li><p>What is the data, what did you do with the data, what do the
+results mean?</p></li>
+<li><p>Your Rmd file and knitted html file</p></li>
+</ul>
+</div>
+<div class="section level1">
+<h1>Solution</h1>
+<div class="section level2">
+<h2>Load Data and Install other packages</h2>
+<p>Install and load libraries. The following code will check if a
+package is installed, and if this is not the case it will install
+it.</p>
+<pre class="r"><code>if (!require(ggplot2)) {
+  install.packages(&#39;ggplot2&#39;)
+  require(ggplot2)
+}</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(forcats)
+library(data.table)</code></pre>
+<ol style="list-style-type: decimal;">
+<li>Data Context</li>
+</ol>
+<p>The data set marketing_data.csv consists of 2,240 customers of XYZ
+company with data on:</p>
+<ul>
+<li>Customers: ID: Customer’s unique identifier</li>
+<li>Year_Birth: Customer’s birth year</li>
+<li>Education: Customer’s education level</li>
+<li>Marital_Status: Customer’s marital status</li>
+<li>Income: Customer’s yearly household income</li>
+<li>Kidhome: Number of children in customer’s household</li>
+<li>Dt_Customer: Date of customer’s enrollment with the company</li>
+<li>Country: Customer’s location</li>
+</ul>
+<p>Products:</p>
+<ul>
+<li>MntWines: Amount spent on wine in the last 2 years</li>
+<li>MntFruits:Amount spent on fruits in the last 2 years</li>
+<li>MntMeatProducts: Amount spent on meat in the last 2 years</li>
+<li>MntFishProducts: Amount spent on fish in thelast 2 years</li>
+<li>MntSweetProducts: Amount spent on sweets in the last 2 years</li>
+</ul>
+<p>Places:</p>
+<ul>
+<li>NumWebPurchases: Number of purchases made through the company’s web
+site</li>
+<li>NumCatalogPurchases: Number of purchases made using a catalogue</li>
+<li>NumStorePurchases: Number of purchases made directly in stores</li>
+<li>NumWebVisitsMonth: Number of visits to company’s web site in the
+last month</li>
+</ul>
+<p>Promotion: - NumDealsPurchases: Number of purchases made with a
+discount - Response: 1 if customer accepted the offer in the last
+campaign, 0 otherwise</p>
+</div>
+<div class="section level2">
+<h2>Import the data and visualize the data</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ stringr   1.5.1
+## ✔ lubridate 1.9.4     ✔ tibble    3.2.1
+## ✔ purrr     1.0.2     ✔ tidyr     1.3.1
+## ✔ readr     2.1.5     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::between()     masks data.table::between()
+## ✖ dplyr::filter()      masks stats::filter()
+## ✖ dplyr::first()       masks data.table::first()
+## ✖ lubridate::hour()    masks data.table::hour()
+## ✖ lubridate::isoweek() masks data.table::isoweek()
+## ✖ dplyr::lag()         masks stats::lag()
+## ✖ dplyr::last()        masks data.table::last()
+## ✖ lubridate::mday()    masks data.table::mday()
+## ✖ lubridate::minute()  masks data.table::minute()
+## ✖ lubridate::month()   masks data.table::month()
+## ✖ lubridate::quarter() masks data.table::quarter()
+## ✖ lubridate::second()  masks data.table::second()
+## ✖ purrr::transpose()   masks data.table::transpose()
+## ✖ lubridate::wday()    masks data.table::wday()
+## ✖ lubridate::week()    masks data.table::week()
+## ✖ lubridate::yday()    masks data.table::yday()
+## ✖ lubridate::year()    masks data.table::year()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>suppressWarnings(expr) #supresses warnings</code></pre>
+<pre><code>## function (expr) 
+## {
+##     enexpr(expr)
+## }
+## &lt;bytecode: 0x000002c7db35b4c8&gt;
+## &lt;environment: namespace:rlang&gt;</code></pre>
+<pre class="r"><code>data &lt;- read_csv(&quot;marketing.csv&quot;,show_col_types = FALSE)
+data&lt;-as.data.table(data)
+head(data)</code></pre>
+<pre><code>##       ID Year_Birth  Education Marital_Status     Income Kidhome Dt_Customer
+##    &lt;num&gt;      &lt;num&gt;     &lt;char&gt;         &lt;char&gt;     &lt;char&gt;   &lt;num&gt;      &lt;char&gt;
+## 1:  1826       1970 Graduation       Divorced $84,835.00       0   6/16/2014
+## 2:     1       1961 Graduation         Single $57,091.00       0   6/15/2014
+## 3: 10476       1958 Graduation        Married $67,267.00       0   5/13/2014
+## 4:  1386       1967 Graduation       Together $32,474.00       1   5/11/2014
+## 5:  5371       1989 Graduation         Single $21,474.00       1    4/8/2014
+## 6:  7348       1958        PhD         Single $71,691.00       0   3/17/2014
+##    MntWines MntFruits MntMeatProducts MntFishProducts MntSweetProducts
+##       &lt;num&gt;     &lt;num&gt;           &lt;num&gt;           &lt;num&gt;            &lt;num&gt;
+## 1:      189       104             379             111              189
+## 2:      464         5              64               7                0
+## 3:      134        11              59              15                2
+## 4:       10         0               1               0                0
+## 5:        6        16              24              11                0
+## 6:      336       130             411             240               32
+##    MntGoldProds NumDealsPurchases NumWebPurchases NumCatalogPurchases
+##           &lt;num&gt;             &lt;num&gt;           &lt;num&gt;               &lt;num&gt;
+## 1:          218                 1               4                   4
+## 2:           37                 1               7                   3
+## 3:           30                 1               3                   2
+## 4:            0                 1               1                   0
+## 5:           34                 2               3                   1
+## 6:           43                 1               4                   7
+##    NumStorePurchases Response Country
+##                &lt;num&gt;    &lt;num&gt;  &lt;char&gt;
+## 1:                 6        1      SP
+## 2:                 7        1      CA
+## 3:                 5        0      US
+## 4:                 2        0     AUS
+## 5:                 2        1      SP
+## 6:                 5        1      SP</code></pre>
+<pre class="r"><code>summary(data)</code></pre>
+<pre><code>##        ID          Year_Birth    Education         Marital_Status    
+##  Min.   :    0   Min.   :1893   Length:2240        Length:2240       
+##  1st Qu.: 2828   1st Qu.:1959   Class :character   Class :character  
+##  Median : 5458   Median :1970   Mode  :character   Mode  :character  
+##  Mean   : 5592   Mean   :1969                                        
+##  3rd Qu.: 8428   3rd Qu.:1977                                        
+##  Max.   :11191   Max.   :1996                                        
+##     Income             Kidhome       Dt_Customer           MntWines      
+##  Length:2240        Min.   :0.0000   Length:2240        Min.   :   0.00  
+##  Class :character   1st Qu.:0.0000   Class :character   1st Qu.:  23.75  
+##  Mode  :character   Median :0.0000   Mode  :character   Median : 173.50  
+##                     Mean   :0.4442                      Mean   : 303.94  
+##                     3rd Qu.:1.0000                      3rd Qu.: 504.25  
+##                     Max.   :2.0000                      Max.   :1493.00  
+##    MntFruits     MntMeatProducts  MntFishProducts  MntSweetProducts
+##  Min.   :  0.0   Min.   :   0.0   Min.   :  0.00   Min.   :  0.00  
+##  1st Qu.:  1.0   1st Qu.:  16.0   1st Qu.:  3.00   1st Qu.:  1.00  
+##  Median :  8.0   Median :  67.0   Median : 12.00   Median :  8.00  
+##  Mean   : 26.3   Mean   : 166.9   Mean   : 37.53   Mean   : 27.06  
+##  3rd Qu.: 33.0   3rd Qu.: 232.0   3rd Qu.: 50.00   3rd Qu.: 33.00  
+##  Max.   :199.0   Max.   :1725.0   Max.   :259.00   Max.   :263.00  
+##   MntGoldProds    NumDealsPurchases NumWebPurchases  NumCatalogPurchases
+##  Min.   :  0.00   Min.   : 0.000    Min.   : 0.000   Min.   : 0.000     
+##  1st Qu.:  9.00   1st Qu.: 1.000    1st Qu.: 2.000   1st Qu.: 0.000     
+##  Median : 24.00   Median : 2.000    Median : 4.000   Median : 2.000     
+##  Mean   : 44.02   Mean   : 2.325    Mean   : 4.085   Mean   : 2.662     
+##  3rd Qu.: 56.00   3rd Qu.: 3.000    3rd Qu.: 6.000   3rd Qu.: 4.000     
+##  Max.   :362.00   Max.   :15.000    Max.   :27.000   Max.   :28.000     
+##  NumStorePurchases    Response        Country         
+##  Min.   : 0.00     Min.   :0.0000   Length:2240       
+##  1st Qu.: 3.00     1st Qu.:0.0000   Class :character  
+##  Median : 5.00     Median :0.0000   Mode  :character  
+##  Mean   : 5.79     Mean   :0.1491                     
+##  3rd Qu.: 8.00     3rd Qu.:0.0000                     
+##  Max.   :13.00     Max.   :1.0000</code></pre>
+<pre class="r"><code>str(data)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   2240 obs. of  19 variables:
+##  $ ID                 : num  1826 1 10476 1386 5371 ...
+##  $ Year_Birth         : num  1970 1961 1958 1967 1989 ...
+##  $ Education          : chr  &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; ...
+##  $ Marital_Status     : chr  &quot;Divorced&quot; &quot;Single&quot; &quot;Married&quot; &quot;Together&quot; ...
+##  $ Income             : chr  &quot;$84,835.00&quot; &quot;$57,091.00&quot; &quot;$67,267.00&quot; &quot;$32,474.00&quot; ...
+##  $ Kidhome            : num  0 0 0 1 1 0 0 0 0 0 ...
+##  $ Dt_Customer        : chr  &quot;6/16/2014&quot; &quot;6/15/2014&quot; &quot;5/13/2014&quot; &quot;5/11/2014&quot; ...
+##  $ MntWines           : num  189 464 134 10 6 336 769 78 384 384 ...
+##  $ MntFruits          : num  104 5 11 0 16 130 80 0 0 0 ...
+##  $ MntMeatProducts    : num  379 64 59 1 24 411 252 11 102 102 ...
+##  $ MntFishProducts    : num  111 7 15 0 11 240 15 0 21 21 ...
+##  $ MntSweetProducts   : num  189 0 2 0 0 32 34 0 32 32 ...
+##  $ MntGoldProds       : num  218 37 30 0 34 43 65 7 5 5 ...
+##  $ NumDealsPurchases  : num  1 1 1 1 2 1 1 1 3 3 ...
+##  $ NumWebPurchases    : num  4 7 3 1 3 4 10 2 6 6 ...
+##  $ NumCatalogPurchases: num  4 3 2 0 1 7 10 1 2 2 ...
+##  $ NumStorePurchases  : num  6 7 5 2 2 5 7 3 9 9 ...
+##  $ Response           : num  1 1 0 0 1 1 1 0 0 0 ...
+##  $ Country            : chr  &quot;SP&quot; &quot;CA&quot; &quot;US&quot; &quot;AUS&quot; ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   Year_Birth = col_double(),
+##   ..   Education = col_character(),
+##   ..   Marital_Status = col_character(),
+##   ..   Income = col_character(),
+##   ..   Kidhome = col_double(),
+##   ..   Dt_Customer = col_character(),
+##   ..   MntWines = col_double(),
+##   ..   MntFruits = col_double(),
+##   ..   MntMeatProducts = col_double(),
+##   ..   MntFishProducts = col_double(),
+##   ..   MntSweetProducts = col_double(),
+##   ..   MntGoldProds = col_double(),
+##   ..   NumDealsPurchases = col_double(),
+##   ..   NumWebPurchases = col_double(),
+##   ..   NumCatalogPurchases = col_double(),
+##   ..   NumStorePurchases = col_double(),
+##   ..   Response = col_double(),
+##   ..   Country = col_character()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; 
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code>View(data) # Just added to visualize the data in table format
+
+# Check for missing values in the entire dataset
+missing_values &lt;- colSums(is.na(data))
+print(missing_values)</code></pre>
+<pre><code>##                  ID          Year_Birth           Education      Marital_Status 
+##                   0                   0                   0                   0 
+##              Income             Kidhome         Dt_Customer            MntWines 
+##                  24                   0                   0                   0 
+##           MntFruits     MntMeatProducts     MntFishProducts    MntSweetProducts 
+##                   0                   0                   0                   0 
+##        MntGoldProds   NumDealsPurchases     NumWebPurchases NumCatalogPurchases 
+##                   0                   0                   0                   0 
+##   NumStorePurchases            Response             Country 
+##                   0                   0                   0</code></pre>
+<ul>
+<li><p>The given data has 2240 data points, having 19 features.</p></li>
+<li><p>Our data set has both numerical variables as well as categorical
+variable (characters)</p></li>
+</ul>
+</div>
+</div>
+<div class="section level1">
+<h1>Task 1</h1>
+<p>Explore the relationships between at least 8 variables (if not all of
+them). One of the variables must be Response column.</p>
+<p>We need to select the variable ‘Response’ as a target variable and
+explore how oter features are related to response</p>
+<pre class="r"><code># making &#39;Response&#39; column is treated as a factor
+data$Response &lt;- as.factor(data$Response)</code></pre>
+</div>
+<div class="section level1">
+<h1>Histograms</h1>
+<p>Histograms is useful to Understand the distribution of numerical
+features w.r.t each target class</p>
+<p>Usually histogram is useful to understand the distribution of
+variable, but here we are finding the relation ship w.r.t ‘Response’
+variable. The histograms are more suitable for analysis of numerical
+features here we need to group data by the target variable and overlay
+distributions.</p>
+<pre class="r"><code># Data exploration
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+# Clean the data to remove rows with missing values in &#39;Income&#39;, &#39;Year_Birth&#39;, or &#39;MntWines&#39;
+data_clean &lt;- data %&gt;%
+  filter(!is.na(Income) &amp; !is.na(Year_Birth) &amp; !is.na(MntWines) &amp; !is.na(Response))
+
+# Parse &#39;Income&#39; to remove &#39;$&#39;
+data$Income &lt;- parse_number(data$Income)
+
+# Set options to avoid scientific notation
+options(scipen = 9999)
+
+# 1. Histogram: Distribution of Year_Birth by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = Year_Birth, fill = factor(Response))) +
+  geom_histogram(binwidth = 5, alpha = 0.7, position = &quot;dodge&quot;) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Distribution of Year of Birth by Response&quot;, x = &quot;Year of Birth&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 2. Histogram: Distribution of Income by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = Income, fill = factor(Response))) +
+  geom_histogram(binwidth = 2000, alpha = 0.7, position = &quot;dodge&quot;) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Distribution of Income by Response&quot;, x = &quot;Income&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  scale_x_continuous(labels = scales::comma, limits = c(0, 100000)) +  # Limit x-axis to 100,000
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<pre><code>## Warning: Removed 37 rows containing non-finite outside the scale range
+## (`stat_bin()`).</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_bar()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 3. Histogram: Distribution of Amount Spent on Wines by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = MntWines, fill = factor(Response))) +
+  geom_histogram(binwidth = 50, alpha = 0.7, position = &quot;dodge&quot;) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Distribution of Amount Spent on Wines by Response&quot;, x = &quot;Amount Spent on Wines&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 4. Histogram of total purchases by response
+data &lt;- data %&gt;% 
+  mutate(TotalPurchases = NumStorePurchases + NumWebPurchases + NumCatalogPurchases)
+ggplot(data, aes(x = TotalPurchases, fill = factor(Response))) +
+  geom_histogram(binwidth = 5, alpha = 0.7, position = &quot;dodge&quot;) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Distribution of total no of purchases by Response&quot;, x = &quot;Total no of pruchases&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 5. Histogram of total amount spent by response 
+data &lt;- data %&gt;% 
+  mutate(TotalAmtspent = MntWines + MntFruits + MntMeatProducts + MntFishProducts + MntSweetProducts + MntGoldProds)
+ggplot(data, aes(x = TotalAmtspent, fill = factor(Response))) +
+  geom_histogram(binwidth = 30, alpha = 0.7, position = &quot;dodge&quot;) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Distribution of total amount spent by Response&quot;, x = &quot;Total amount spent&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/>
+# Box plots When your target is categorical and your feature is
+numerical, you want to understand how the numerical feature behaves
+across the categories of the target.box plot can be useful, These are
+useful for showing the distribution of numerical values and comparing
+the central tendency (median) and spread (IQR) of the variable across
+the categories of the target.</p>
+<pre class="r"><code># 1. Boxplot: Income distribution by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = Income, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Income Distribution by Response&quot;, x = &quot;Response&quot;, y = &quot;Income&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<pre><code>## Warning: Removed 24 rows containing non-finite outside the scale range
+## (`stat_boxplot()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 2. Boxplot: Year of Birth distribution by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = Year_Birth, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Year of Birth Distribution by Response&quot;, x = &quot;Response&quot;, y = &quot;Year of Birth&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 3. Boxplot: Amount spent on Sweets by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = MntSweetProducts, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Amount Spent on Sweets by Response&quot;, x = &quot;Response&quot;, y = &quot;Amount Spent on Sweet&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 4. Boxplot: Amount spent on gold products by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = MntGoldProds, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Amount Spent on Gold products by Response&quot;, x = &quot;Response&quot;, y = &quot;Amount Spent on gold products&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 5. Boxplot: Total Amount spent by Response (Response 1 in orange, Response 0 in blue)
+data$TotalAmtspent &lt;- data$MntWines + data$MntFruits + data$MntMeatProducts + 
+                      data$MntFishProducts + data$MntSweetProducts + data$MntGoldProds
+ggplot(data, aes(x = factor(Response), y = TotalAmtspent, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +
+  labs(title = &quot;Total amount spent by Response&quot;, x = &quot;Response&quot;, y = &quot;Total amount spent&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/>
+# Barplots Bar Plots are useful for visualizing the frequency of
+categories in both the target and other categorical features.</p>
+<pre class="r"><code># 1. Bar Plot of Marital Status by Response
+ggplot(data, aes(x = Marital_Status, fill = factor(Response))) +
+  geom_bar(position = &quot;dodge&quot;, alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;1&quot; = &quot;orange&quot;, &quot;0&quot; = &quot;blue&quot;)) +  # Specify colors for Response
+  labs(title = &quot;Marital Status by Response&quot;, x = &quot;Marital Status&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 2. Bar plot of Education by Response
+ggplot(data, aes(x = Education, fill = factor(Response))) +
+  geom_bar(position = &quot;dodge&quot;, alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;1&quot; = &quot;orange&quot;, &quot;0&quot; = &quot;blue&quot;)) +  # Specify colors for Response
+  labs(title = &quot;Education status by Response&quot;, x = &quot;Education&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 3. Bar plot of no of kids by response
+ggplot(data, aes(x = Kidhome, fill = factor(Response))) +
+  geom_bar(position = &quot;dodge&quot;, alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;1&quot; = &quot;orange&quot;, &quot;0&quot; = &quot;blue&quot;)) +  # Specify colors for Response
+  labs(title = &quot;no of kids by Response&quot;, x = &quot;Kidhome&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 3. Bar plot of country by response
+ggplot(data, aes(x = Country, fill = factor(Response))) +
+  geom_bar(position = &quot;dodge&quot;, alpha = 0.7) +
+  scale_fill_manual(values = c(&quot;1&quot; = &quot;orange&quot;, &quot;0&quot; = &quot;blue&quot;)) +  # Specify colors for Response
+  labs(title = &quot;Country by Response&quot;, x = &quot;Country&quot;, y = &quot;Count&quot;, fill = &quot;Response&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="javascript://" width="672"/>
+# Scatter plot A scatter plot is used to explore the relationship
+between two numerical variables. However,it can still be useful for the
+variables is categorical (like a target variable) with certain
+modifications. Here’s when and how you can use scatter plots when one of
+the variables is categorical</p>
+<pre class="r"><code># 1. Scatter plot of Income Vs amount spent on meat by response
+ggplot(data, aes(x = Income, y = MntMeatProducts, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # &#39;jitter&#39; adds noise to prevent overlap
+  labs(title = &quot;Scatter Plot of Income vs. Amount Spent on Meat by Response&quot;,
+       x = &quot;Income&quot;, y = &quot;Amount Spent on Wines&quot;, color = &quot;Response&quot;) +
+  scale_color_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()</code></pre>
+<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 2. Scatter Plot:  Income vs total amount spent by Response
+ggplot(data, aes(x = Income, y = TotalAmtspent, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # &#39;jitter&#39; adds noise to prevent overlap
+  labs(title = &quot;Scatter Plot of Income vs. Total amount spent by Response&quot;,
+       x = &quot;Income&quot;, y = &quot;Total amount spent&quot;, color = &quot;Response&quot;) +
+  scale_color_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()</code></pre>
+<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># 3. Scatter Plot: Income vs. Total purchases by Response
+ggplot(data, aes(x = Income, y = TotalPurchases, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # &#39;jitter&#39; adds noise to prevent overlap
+  labs(title = &quot;Scatter Plot of Income vs. total purchases by Response&quot;,
+       x = &quot;Income&quot;, y = &quot;TotalPurchases&quot;, color = &quot;Response&quot;) +
+  scale_color_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()</code></pre>
+<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Scatter plot of Income vs. Response (binary target)
+# Parse &#39;Income&#39; to remove &#39;$&#39;
+#data$Income &lt;- parse_number(data$Income)
+
+# Set options to avoid scientific notation
+options(scipen = 9999)
+
+# Scatter plot of Income vs. Response (binary target)
+ggplot(data, aes(x = Income, y = factor(Response), color = factor(Response))) +
+  geom_jitter(alpha = 0.7, size = 2, width = 0.2, height = 0.1) +  # Jitter to add some spread
+  scale_color_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +  # Different colors for Response = 0 and 1
+  labs(
+    title = &quot;Scatter Plot of Income vs. Response&quot;,
+    x = &quot;Income&quot;, y = &quot;Response&quot;, color = &quot;Response&quot;
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000, add commas
+  scale_y_discrete(limits = c(&quot;0&quot;, &quot;1&quot;))</code></pre>
+<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Scatter plot of Total Amount spent vs. Response (binary target)
+ggplot(data, aes(x = TotalAmtspent, y = factor(Response), color = factor(Response))) +
+  geom_jitter(alpha = 0.7, size = 2, width = 0.2, height = 0.1) +  # Jitter to add some spread
+  scale_color_manual(values = c(&quot;0&quot; = &quot;blue&quot;, &quot;1&quot; = &quot;orange&quot;)) +  # Different colors for Response = 0 and 1
+  labs(
+    title = &quot;Scatter Plot of total amount spent vs. Response&quot;,
+    x = &quot;TotalAmtspent&quot;, y = &quot;Response&quot;, color = &quot;Response&quot;
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
+  scale_y_discrete(limits = c(&quot;0&quot;, &quot;1&quot;))</code></pre>
+<p><img src="javascript://" width="672"/>
+- A brief explanation of your analysis process and your interpretation
+of the data.Remember, you want to know why customers responded to your
+marketing campaign.What is the data, what did you do with the data, what
+do the results mean?</p>
+<p>PLots: We have plotted different type of plots, including histograms,
+box plots, bar plots and scatter plots</p>
+<p>The objective of current study is identifu and understand the
+relationship of variables w.r.t target variable ‘Response’</p>
+<p>As traditionally histograms and box plots are traditionally used for
+univariate analyisis i,e., to check how data was distributed. we have
+modified slightly bu grouping the data based on response value (binary)
+and plotted the distributions of grouped data.</p>
+<p>In the similar fashion the scatter plot was also plotted wrt response
+directly as well as scattering of each response w.r.t other two
+variables</p>
+<p>In total, We plotted 18 plots including histograms, box plots, bar
+plots, and scatter plots. They are</p>
+<ol style="list-style-type: decimal;">
+<li>Histogram of Distribution of Year_Birth by Response</li>
+<li>Histogram of Distribution of Income by Response</li>
+<li>Histogram of Distribution of Amount Spent on Wines by Response</li>
+<li>Histogram of totan no of purchases by response</li>
+<li>Histogram of total amount spent by response</li>
+<li>Box plot of Income distribution by Response</li>
+<li>Box plot of year of birth by response</li>
+<li>Box plot of amount spent on sweets by response</li>
+<li>Box plot of amount spent on gold products by response</li>
+<li>Box plot of total amount spent by response 10.Bar plot of marital
+status by response 11.Bar plot of education by response 12.Bar plot of
+number of kids by response 13.Bar plot of Country by response 14.Scatter
+plot of Income Vs amount spent on meat by response 15.Scatter plot of
+Income Vs total amount spent by response 16.Scatter Plot of Income
+vs.&#160;Total purchases by Response 17.Scatter plot of Income vs.&#160;Response
+(binary target) 18.Scatter plot of Total Amount spent vs.&#160;Response
+(binary target)</li>
+</ol>
+<p>Interpretation and analysis of plots 1.Most of the customers are
+having birth year &gt; 1930; very few customers were befor 1930 but most
+of the purchases are without marketing campaign</p>
+<ol start="2" style="list-style-type: decimal;">
+<li>The incomr is almost following normal distribution without campaign,
+where as the data distribution of income of customers with marketing
+campaign is not a normal distribution and very less w.r.t customers
+without marketing campaign</li>
+</ol>
+<p>3.Most of people are spending less money on wines irrespective of
+marketing</p>
+<ol start="4" style="list-style-type: decimal;">
+<li><p>Most of the people with out are marketing is having less total
+number of purchases i.e., around 5. where as with marketing most of the
+people are having 20 number of purchases however frequency is
+less.</p></li>
+<li><p>Very few customers are spending huge amount of money,
+highlighting the need for better marketing campaigns and
+strategies</p></li>
+<li><p>There is outliers in the income, very few data points are having
+higher income and are purchasing without camapining</p></li>
+<li><p>There is outliers in the year_birth as well, as there are very
+few custoomeres who are born before 1930</p></li>
+<li><p>Amount spent on Sweets increases with marketing campaign (mean
+shift upwards).</p></li>
+<li><p>Amount spent on gold products also increases with marketing
+campaign (mean shift upwards)</p></li>
+<li><p>Total amount spent on purchase also increase with
+marketing</p></li>
+<li><p>Most of our customers are graduated.</p></li>
+<li><p>most of purchases are done by customers with no kids</p></li>
+<li><p>Most of customers are from spain with and with out campaign, the
+number of customers from ‘middle east’ countries is very less</p></li>
+<li><p>Based on the scatter plots, The amount spent on meant, total
+amount spent increases w.r.t income. but there is no signinficant change
+in trend with and without campaining</p></li>
+<li><p>There is proportiobnal relation ship of income with the total
+number of purchases.</p></li>
+</ol>
+<p>Overall, the Amount spent on any of products or total amount
+increases when there is a campaign (the means are shiffing up), however
+very few people are purchasing due to campaings as the frequency of
+response ‘1’ is always less that respomse ‘0’ in our all plots, clearly
+stating that the marketing is not strong enogh they need to increase the
+marketing campaingn and strategies in order to improve.</p>
+<p>Also most focus should be taken in the countries that has less
+customers and spending less amount.</p>
+<p>Note: We have ignored the missing values and they are ignored while
+plotting the data and shown as warning. we can also remove those
+datapoints and do all the analysis</p>
+<ul>
+<li>Your Rmd file and knitted html file</li>
+</ul>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

@@ -1,0 +1,794 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Assignment_Wk4_Saripalli</h1>
+<h4 class="author">Balaram</h4>
+<h4 class="date">2025-02-11</h4>
+
+</div>
+
+
+<div class="section level2">
+<h2>Assignment Week 4</h2>
+</div>
+<div class="section level1">
+<h1>Question</h1>
+<p>Using the marketing data set:</p>
+<ol style="list-style-type: decimal;">
+<li><p>Write a null hypothesis and alternative hypothesis if two
+distributions have the same mean. (Remember we ultimately want to know
+if the marketing campaign was successful.)</p></li>
+<li><p>Be sure to deal with outliers and impute missing data (if
+appropriate) and justify your decision.</p></li>
+<li><p>Compute a 95 percent confidence interval for the difference in
+means between the distribution between your two hypothesis
+variables.</p></li>
+<li><p>Can you reject your null hypothesis?</p></li>
+<li><p>Write a summary of your results.</p></li>
+</ol>
+<div class="section level2">
+<h2>Solution</h2>
+</div>
+</div>
+<div class="section level1">
+<h1>Marketing data analysis</h1>
+<p>This analysis aims to evaluate the success of a marketing campaign
+using the provided marketing dataset. We will compare the means of two
+distributions to determine if there is a statistically significant
+difference, which could indicate the campaign’s effectiveness.</p>
+</div>
+<div class="section level1">
+<h1>Setting the working directory</h1>
+<pre class="r"><code>setwd(&quot;F:/Balaram/Statcourse&quot;)</code></pre>
+</div>
+<div class="section level1">
+<h1>Load all the required libraries</h1>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;data.table&#39;
+## 
+## The following objects are masked from &#39;package:lubridate&#39;:
+## 
+##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
+##     yday, year
+## 
+## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     between, first, last
+## 
+## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     transpose</code></pre>
+<pre class="r"><code>library(stats)</code></pre>
+</div>
+<div class="section level1">
+<h1>Loading the data set and cleaning</h1>
+<pre class="r"><code>data &lt;- read_csv(&quot;marketing.csv&quot;, show_col_types = FALSE)
+# convert the data in to table
+data &lt;- as.data.table(data)
+#Cleaning 1: Convert column names to lower case
+names(data) &lt;- tolower(names(data))
+# Clean column names:replace spaces with underscores
+names(data) &lt;- str_replace_all(names(data), &quot; &quot;, &quot;_&quot;)</code></pre>
+</div>
+<div class="section level1">
+<h1>Looking at the data</h1>
+<pre class="r"><code>#Print the first few rows and data structure
+head(data)</code></pre>
+<pre><code>##       id year_birth  education marital_status     income kidhome dt_customer
+##    &lt;num&gt;      &lt;num&gt;     &lt;char&gt;         &lt;char&gt;     &lt;char&gt;   &lt;num&gt;      &lt;char&gt;
+## 1:  1826       1970 Graduation       Divorced $84,835.00       0   6/16/2014
+## 2:     1       1961 Graduation         Single $57,091.00       0   6/15/2014
+## 3: 10476       1958 Graduation        Married $67,267.00       0   5/13/2014
+## 4:  1386       1967 Graduation       Together $32,474.00       1   5/11/2014
+## 5:  5371       1989 Graduation         Single $21,474.00       1    4/8/2014
+## 6:  7348       1958        PhD         Single $71,691.00       0   3/17/2014
+##    mntwines mntfruits mntmeatproducts mntfishproducts mntsweetproducts
+##       &lt;num&gt;     &lt;num&gt;           &lt;num&gt;           &lt;num&gt;            &lt;num&gt;
+## 1:      189       104             379             111              189
+## 2:      464         5              64               7                0
+## 3:      134        11              59              15                2
+## 4:       10         0               1               0                0
+## 5:        6        16              24              11                0
+## 6:      336       130             411             240               32
+##    mntgoldprods numdealspurchases numwebpurchases numcatalogpurchases
+##           &lt;num&gt;             &lt;num&gt;           &lt;num&gt;               &lt;num&gt;
+## 1:          218                 1               4                   4
+## 2:           37                 1               7                   3
+## 3:           30                 1               3                   2
+## 4:            0                 1               1                   0
+## 5:           34                 2               3                   1
+## 6:           43                 1               4                   7
+##    numstorepurchases response country
+##                &lt;num&gt;    &lt;num&gt;  &lt;char&gt;
+## 1:                 6        1      SP
+## 2:                 7        1      CA
+## 3:                 5        0      US
+## 4:                 2        0     AUS
+## 5:                 2        1      SP
+## 6:                 5        1      SP</code></pre>
+<pre class="r"><code># Structure of the data
+str(data)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   2240 obs. of  19 variables:
+##  $ id                 : num  1826 1 10476 1386 5371 ...
+##  $ year_birth         : num  1970 1961 1958 1967 1989 ...
+##  $ education          : chr  &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; &quot;Graduation&quot; ...
+##  $ marital_status     : chr  &quot;Divorced&quot; &quot;Single&quot; &quot;Married&quot; &quot;Together&quot; ...
+##  $ income             : chr  &quot;$84,835.00&quot; &quot;$57,091.00&quot; &quot;$67,267.00&quot; &quot;$32,474.00&quot; ...
+##  $ kidhome            : num  0 0 0 1 1 0 0 0 0 0 ...
+##  $ dt_customer        : chr  &quot;6/16/2014&quot; &quot;6/15/2014&quot; &quot;5/13/2014&quot; &quot;5/11/2014&quot; ...
+##  $ mntwines           : num  189 464 134 10 6 336 769 78 384 384 ...
+##  $ mntfruits          : num  104 5 11 0 16 130 80 0 0 0 ...
+##  $ mntmeatproducts    : num  379 64 59 1 24 411 252 11 102 102 ...
+##  $ mntfishproducts    : num  111 7 15 0 11 240 15 0 21 21 ...
+##  $ mntsweetproducts   : num  189 0 2 0 0 32 34 0 32 32 ...
+##  $ mntgoldprods       : num  218 37 30 0 34 43 65 7 5 5 ...
+##  $ numdealspurchases  : num  1 1 1 1 2 1 1 1 3 3 ...
+##  $ numwebpurchases    : num  4 7 3 1 3 4 10 2 6 6 ...
+##  $ numcatalogpurchases: num  4 3 2 0 1 7 10 1 2 2 ...
+##  $ numstorepurchases  : num  6 7 5 2 2 5 7 3 9 9 ...
+##  $ response           : num  1 1 0 0 1 1 1 0 0 0 ...
+##  $ country            : chr  &quot;SP&quot; &quot;CA&quot; &quot;US&quot; &quot;AUS&quot; ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   Year_Birth = col_double(),
+##   ..   Education = col_character(),
+##   ..   Marital_Status = col_character(),
+##   ..   Income = col_character(),
+##   ..   Kidhome = col_double(),
+##   ..   Dt_Customer = col_character(),
+##   ..   MntWines = col_double(),
+##   ..   MntFruits = col_double(),
+##   ..   MntMeatProducts = col_double(),
+##   ..   MntFishProducts = col_double(),
+##   ..   MntSweetProducts = col_double(),
+##   ..   MntGoldProds = col_double(),
+##   ..   NumDealsPurchases = col_double(),
+##   ..   NumWebPurchases = col_double(),
+##   ..   NumCatalogPurchases = col_double(),
+##   ..   NumStorePurchases = col_double(),
+##   ..   Response = col_double(),
+##   ..   Country = col_character()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; 
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<p>Thus we have 19 attributes, the meaning of each attributes were
+discussed in previous assignments. It is observed few attributes are
+categorical i.e., charactes and few attributes are numerical
+attributes.</p>
+</div>
+<div class="section level1">
+<h1>Checking the missing values</h1>
+<pre class="r"><code># Check missing values
+missing_values &lt;- data[, lapply(.SD, function(x) sum(is.na(x)))]
+print(missing_values)</code></pre>
+<pre><code>##       id year_birth education marital_status income kidhome dt_customer
+##    &lt;int&gt;      &lt;int&gt;     &lt;int&gt;          &lt;int&gt;  &lt;int&gt;   &lt;int&gt;       &lt;int&gt;
+## 1:     0          0         0              0     24       0           0
+##    mntwines mntfruits mntmeatproducts mntfishproducts mntsweetproducts
+##       &lt;int&gt;     &lt;int&gt;           &lt;int&gt;           &lt;int&gt;            &lt;int&gt;
+## 1:        0         0               0               0                0
+##    mntgoldprods numdealspurchases numwebpurchases numcatalogpurchases
+##           &lt;int&gt;             &lt;int&gt;           &lt;int&gt;               &lt;int&gt;
+## 1:            0                 0               0                   0
+##    numstorepurchases response country
+##                &lt;int&gt;    &lt;int&gt;   &lt;int&gt;
+## 1:                 0        0       0</code></pre>
+<p>We have ‘24’ missing values in the income column and remaining
+attributes doesnt have any missing values.</p>
+<p>I am choosing to impute the data in the <code>income</code> column
+with the median, as this avoids the influence of outliers.</p>
+<pre class="r"><code>library(readr)
+# Parse &#39;Income&#39; to remove &#39;$&#39; and convert to numeric
+data[, income := parse_number(income)]
+
+# Calculate the median of the &#39;Income&#39; column (excluding NA values)
+median_income &lt;- median(data$income, na.rm = TRUE)
+
+# Impute missing values in the &#39;Income&#39; column with the median
+data[is.na(income), income := median_income]
+
+# Verify imputation by counting remaining NA values in the &#39;Income&#39; column
+sum(is.na(data$income))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>Since the number of missing values in the income column is relatively
+small, imputing them with the median is a reasonable approach. This
+prevents us from losing potentially valuable information from other
+columns in those rows. More sophisticated methods could be considered if
+the missing data pattern suggests a more complex relationship.</p>
+<div class="section level2">
+<h2>Identifying Outliers</h2>
+<p>Otliers can skew our analysis and lead to incorrect conclusions.
+Let’s identify and address them by visualizing the data using
+boxplots.</p>
+<pre class="r"><code>boxplot(data$year_birth, main = &quot;Boxplot of Year of Birth&quot;, ylab = &quot;Year of Birth&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$income, main = &quot;Boxplot of Income&quot;, ylab = &quot;Income&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntwines, main = &quot;Boxplot of Amount Spent on Wines&quot;, ylab = &quot;Amount Spent on Wines&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntfruits, main = &quot;Boxplot of Amount Spent on Fruits&quot;, ylab = &quot;Amount Spent on Fruits&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntmeatproducts, main = &quot;Boxplot of Amount Spent on Meat Products&quot;, ylab = &quot;Amount Spent on Meat Products&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntfishproducts, main = &quot;Boxplot of Amount Spent on Fish Products&quot;, ylab = &quot;Amount Spent on Fish Products&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntsweetproducts, main = &quot;Boxplot of Amount Spent on Sweet Products&quot;, ylab = &quot;Amount Spent on Sweet Products&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntgoldprods, main = &quot;Boxplot of Amount Spent on Gold Products&quot;, ylab = &quot;Amount Spent on Gold Products&quot;)</code></pre>
+<p><img src="javascript://" width="672"/>
+Based on the boxplots, outliers are present in several attributes.</p>
+<p>Let’s address the outliers in ‘income’ and ‘mntwines’ using the IQR
+method.</p>
+<p>We’ll cap the ‘year_birth’ outliers instead of removing them as these
+might represent valid older customers.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>Handling outliers for income</h1>
+<p>we use IQR method for handling outliers here</p>
+<pre class="r"><code>Q_income &lt;- quantile(data$income, probs=c(.25, .75), na.rm = TRUE)
+iqr_income &lt;- IQR(data$income, na.rm = TRUE)
+upper_bound_income &lt;- Q_income[2] + 1.5*iqr_income
+lower_bound_income &lt;- Q_income[1] - 1.5*iqr_income
+data &lt;- data[income &gt;= lower_bound_income &amp; income &lt;= upper_bound_income]
+# Basiaclly we removed the datapoints that are beyond the lower and upper bounds</code></pre>
+</div>
+<div class="section level1">
+<h1>Handle outliers in mntwines</h1>
+<pre class="r"><code>Q_wines &lt;- quantile(data$mntwines, probs=c(.25, .75), na.rm = TRUE)
+iqr_wines &lt;- IQR(data$mntwines, na.rm = TRUE)
+upper_bound_wines &lt;- Q_wines[2] + 1.5*iqr_wines
+lower_bound_wines &lt;- Q_wines[1] - 1.5*iqr_wines
+data &lt;- data[mntwines &gt;= lower_bound_wines &amp; mntwines &lt;= upper_bound_wines]</code></pre>
+</div>
+<div class="section level1">
+<h1>Handle outliers for mntfruits</h1>
+<pre class="r"><code>Q_fruits &lt;- quantile(data$mntfruits, probs=c(.25, .75), na.rm = TRUE)
+iqr_fruits &lt;- IQR(data$mntfruits, na.rm = TRUE)
+upper_bound_fruits &lt;- Q_fruits[2] + 1.5*iqr_fruits
+lower_bound_fruits &lt;- Q_fruits[1] - 1.5*iqr_fruits
+data &lt;- data[mntfruits &gt;= lower_bound_fruits &amp; mntfruits &lt;= upper_bound_fruits]</code></pre>
+</div>
+<div class="section level1">
+<h1>Cap outliers in year_birth</h1>
+<pre class="r"><code>upper_bound_year &lt;- 2022 - 18 # Assuming minimum age of 18
+lower_bound_year &lt;- 2022 - 100 # Assuming maximum age of 100
+data[year_birth &gt; upper_bound_year, year_birth := upper_bound_year]
+data[year_birth &lt; lower_bound_year, year_birth := lower_bound_year]</code></pre>
+<p>The interquartile range (IQR) method is used to remove outliers from
+the income and mntwines variables. Values falling below the lower bound
+or above the upper bound are considered outliers and removed.</p>
+<p>Outliers in ‘year_birth’ are capped to reasonable age boundaries.We
+assumed our customers age group will be from 18-100 from the current
+year (considered highest value in the incident year) This helps to
+ensure that extreme values do not disproportionately influence
+statistical measures such as the mean and standard deviation.</p>
+</div>
+<div class="section level1">
+<h1>Create boxplots for relevant attributes after outlier handling</h1>
+<pre class="r"><code>boxplot(data$year_birth, main = &quot;Boxplot of Year of Birth (Outliers Handled)&quot;, ylab = &quot;Year of Birth&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$income, main = &quot;Boxplot of Income (Outliers Handled)&quot;, ylab = &quot;Income&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code>boxplot(data$mntwines, main = &quot;Boxplot of Amount Spent on Wines (Outliers Handled)&quot;, ylab = &quot;Amount Spent on Wines&quot;)</code></pre>
+<p><img src="javascript://" width="672"/>
+The boxplots above will help to verify that the outlier handling was
+effective. Visually inspect them to confirm that the extreme values have
+been removed or capped.</p>
+<p>Clearly the outliers are reduced in all the three cases. Income
+attribute eliminated outliers completely where as we can see very few
+outliers in case of year of birth and amount spent on wines</p>
+<div class="section level2">
+<h2>Hypothesis testing</h2>
+<p>‘response’ column is the attribute that tells that weather the
+customer purchased based on marketing campaign or not.</p>
+<p>So we need to formulate the hypothesis based on the response variable
+Now, let’s formulate our hypotheses and conduct the analysis, focusing
+on the ‘response’ variable.</p>
+<div class="section level3">
+<h3>Hypothesis Formulation</h3>
+<p>To assess the success of the marketing campaign, we can directly
+analyze the ‘response’ variable, which indicates whether a customer
+accepted the offer in the last campaign (1 for yes, 0 for no).</p>
+<p>We’ll examine if the mean amount spent on wine (mntwines) is
+different for customers who responded positively versus those who did
+not.</p>
+<ul>
+<li><strong>Null Hypothesis (H0):</strong> There is no significant
+difference in the mean amount spent on wine (mntwines) between customers
+who responded to the last campaign and those who did not.</li>
+<li><strong>Alternative Hypothesis (H1):</strong> There is a significant
+difference in the mean amount spent on wine (mntwines) between customers
+who responded to the last campaign and those who did not.</li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2>T-Tests</h2>
+<p>Perform t-tests to compare means between different groups of
+customers.</p>
+<pre class="r"><code># Ensure response variable is numeric
+data[, response := as.numeric(response)]
+#Perform t-test
+t_test_wines_response &lt;- t.test(mntwines ~ as.factor(response), data = data)
+print(t_test_wines_response)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntwines by as.factor(response)
+## t = -6.9569, df = 305.85, p-value = 2.119e-11
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -218.0910 -121.9194
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        234.4852        404.4904</code></pre>
+<div class="section level3">
+<h3>T-Test: Response vs.&#160;Income</h3>
+<p>Now We’ll examine if the income is different for customers who
+responded positively versus those who did not.</p>
+<ul>
+<li><strong>Null Hypothesis (H0):</strong> There is no significant
+difference in the mean income between customers who responded to the
+last campaign and those who did not.</li>
+<li><strong>Alternative Hypothesis (H1):</strong> There is a significant
+difference in the mean income between customers who responded to the
+last campaign and those who did not.</li>
+</ul>
+<pre class="r"><code>#Perform t-test
+t_test_income_response &lt;- t.test(income ~ as.factor(response), data = data)
+print(t_test_income_response)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  income by as.factor(response)
+## t = -5.2319, df = 315.71, p-value = 3.063e-07
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -10826.202  -4908.879
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        47448.22        55315.76</code></pre>
+</div>
+<div class="section level3">
+<h3>Interpretation of T-Test Results</h3>
+<p>For each t-test:</p>
+<ul>
+<li>Examine the p-value. If the p-value is less than 0.05, we reject the
+null hypothesis and conclude that there is a statistically significant
+difference in the means between the two groups.</li>
+<li>Examine the confidence interval for the difference in means. If the
+confidence interval does not include zero, this also supports rejecting
+the null hypothesis.</li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2>Conclusion</h2>
+<p>This analysis used t-tests to evaluate differences in means between
+customer groups based on the ‘response’ variable. The t-test results
+provide insights into whether the marketing campaign had a statistically
+significant impact on customer spending and income. Based on the
+p-values, we can determine whether to reject the null hypotheses and
+conclude that significant differences exist.</p>
+<p>Based on analysis both the income and mntwines has significant
+differences with response., i.e., marketing has a positive impact in
+bothe the incomes and mnt wines. Similarly we can evaluate the effect of
+marketing on other attributes. by perfoming the ttests.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>Marketing analysis as creating hypothesis for each attribute
+individually is tedious, we can conduct test for all the attributes wrt
+response.</h1>
+<pre class="r"><code># Ensure response is numeric
+data[, response := as.numeric(response)]
+# Convert relevant variables to numeric, coercing any non-numeric entries to NA
+cols_to_convert &lt;- c(&quot;mntwines&quot;, &quot;mntfruits&quot;, &quot;mntmeatproducts&quot;, &quot;mntfishproducts&quot;,
+&quot;mntsweetproducts&quot;, &quot;mntgoldprods&quot;, &quot;numdealspurchases&quot;,
+&quot;numwebpurchases&quot;, &quot;numcatalogpurchases&quot;, &quot;numstorepurchases&quot;)
+for (col in cols_to_convert) {
+data[[col]] &lt;- as.numeric(data[[col]])
+}</code></pre>
+</div>
+<div class="section level1">
+<h1>Analysis function</h1>
+<pre class="r"><code>analyze_attribute &lt;- function(data, attribute) {
+# Check if the attribute is numeric
+if(!is.numeric(data[[attribute]])) {
+cat(&quot;Skipping attribute:&quot;, attribute, &quot;- Non-numeric data\n&quot;)
+cat(&quot;---------------------------------------------------\n&quot;)
+return(data)
+}
+# Check for missing values in the attribute column
+if (any(is.na(data[[attribute]]))) {
+cat(&quot;Skipping attribute:&quot;, attribute, &quot;- Contains missing values. Please impute to proceed\n&quot;)
+cat(&quot;---------------------------------------------------\n&quot;)
+return(data)
+}
+# Create boxplot
+boxplot(data[[attribute]], main = paste(&quot;Boxplot of&quot;, attribute), ylab = attribute)
+# Identify outliers (IQR method)
+Q &lt;- quantile(data[[attribute]], probs=c(.25, .75), na.rm = TRUE)
+iqr &lt;- IQR(data[[attribute]], na.rm = TRUE)
+upper_bound &lt;- Q[2] + 1.5*iqr
+lower_bound &lt;- Q[1] - 1.5*iqr
+# Cap outliers
+data[data[[attribute]] &gt; upper_bound, (attribute) := upper_bound]
+data[data[[attribute]] &lt; lower_bound, (attribute) := lower_bound]
+# Verify Outlier Removal
+boxplot(data[[attribute]], main = paste(&quot;Boxplot of&quot;, attribute,&quot;Outliers Handled&quot;), ylab = attribute)
+# T-test (Response vs. Attribute)
+formula &lt;- as.formula(paste(attribute, &quot;~ as.factor(response)&quot;))
+t_test_result &lt;- t.test(formula, data = data)
+print(t_test_result)
+# Interpretation
+cat(&quot;Interpretation for&quot;, attribute, &quot;:\n&quot;)
+if (t_test_result$p.value &lt; 0.05) {
+cat(&quot;There is a statistically significant difference in the mean&quot;, attribute,
+&quot;between customers who responded and those who did not (p-value =&quot;, t_test_result$p.value, &quot;)\n&quot;)
+} else {
+cat(&quot;There is no statistically significant difference in the mean&quot;, attribute,
+&quot;between customers who responded and those who did not (p-value =&quot;, t_test_result$p.value, &quot;)\n&quot;)
+}
+cat(&quot;---------------------------------------------------\n&quot;)
+return(data) # Return the modified data
+}</code></pre>
+<div class="section level2">
+<h2>Attribute Analysis Loop</h2>
+<pre class="r"><code># List of attributes to analyze
+attributes_to_analyze &lt;- c(&quot;mntwines&quot;, &quot;mntfruits&quot;, &quot;mntmeatproducts&quot;,
+&quot;mntfishproducts&quot;, &quot;mntsweetproducts&quot;, &quot;mntgoldprods&quot;,
+&quot;numdealspurchases&quot;, &quot;numwebpurchases&quot;, &quot;numcatalogpurchases&quot;,
+&quot;numstorepurchases&quot;, &quot;income&quot;)
+# Loop through the attributes
+for (attribute in attributes_to_analyze) {
+cat(&quot;Analyzing attribute:&quot;, attribute, &quot;\n&quot;)
+data &lt;- analyze_attribute(data, attribute) # Update data within the loop
+}</code></pre>
+<pre><code>## Analyzing attribute: mntwines</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntwines by as.factor(response)
+## t = -6.9736, df = 307.02, p-value = 1.9e-11
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -212.2603 -118.8362
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        232.8771        398.4253 
+## 
+## Interpretation for mntwines :
+## There is a statistically significant difference in the mean mntwines between customers who responded and those who did not (p-value = 1.899927e-11 )
+## ---------------------------------------------------
+## Analyzing attribute: mntfruits</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntfruits by as.factor(response)
+## t = -5.4617, df = 324.55, p-value = 9.396e-08
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -8.723027 -4.103092
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        12.49882        18.91188 
+## 
+## Interpretation for mntfruits :
+## There is a statistically significant difference in the mean mntfruits between customers who responded and those who did not (p-value = 9.396159e-08 )
+## ---------------------------------------------------
+## Analyzing attribute: mntmeatproducts</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntmeatproducts by as.factor(response)
+## t = -7.3901, df = 315.35, p-value = 1.327e-12
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -85.47165 -49.52925
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        94.71986       162.22031 
+## 
+## Interpretation for mntmeatproducts :
+## There is a statistically significant difference in the mean mntmeatproducts between customers who responded and those who did not (p-value = 1.326988e-12 )
+## ---------------------------------------------------
+## Analyzing attribute: mntfishproducts</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntfishproducts by as.factor(response)
+## t = -4.0579, df = 325.61, p-value = 6.205e-05
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -11.881229  -4.122562
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        20.95213        28.95402 
+## 
+## Interpretation for mntfishproducts :
+## There is a statistically significant difference in the mean mntfishproducts between customers who responded and those who did not (p-value = 6.204635e-05 )
+## ---------------------------------------------------
+## Analyzing attribute: mntsweetproducts</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntsweetproducts by as.factor(response)
+## t = -5.316, df = 319.87, p-value = 1.994e-07
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -10.225138  -4.701087
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        14.07329        21.53640 
+## 
+## Interpretation for mntsweetproducts :
+## There is a statistically significant difference in the mean mntsweetproducts between customers who responded and those who did not (p-value = 1.994234e-07 )
+## ---------------------------------------------------
+## Analyzing attribute: mntgoldprods</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mntgoldprods by as.factor(response)
+## t = -6.6517, df = 334.31, p-value = 1.184e-10
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -20.49943 -11.14214
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        31.84013        47.66092 
+## 
+## Interpretation for mntgoldprods :
+## There is a statistically significant difference in the mean mntgoldprods between customers who responded and those who did not (p-value = 1.184347e-10 )
+## ---------------------------------------------------
+## Analyzing attribute: numdealspurchases</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  numdealspurchases by as.factor(response)
+## t = -1.9251, df = 319.21, p-value = 0.05511
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -0.452050977  0.004916389
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        2.270686        2.494253 
+## 
+## Interpretation for numdealspurchases :
+## There is no statistically significant difference in the mean numdealspurchases between customers who responded and those who did not (p-value = 0.0551065 )
+## ---------------------------------------------------
+## Analyzing attribute: numwebpurchases</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  numwebpurchases by as.factor(response)
+## t = -7.3008, df = 339.04, p-value = 2.053e-12
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -1.6229426 -0.9340396
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        3.675532        4.954023 
+## 
+## Interpretation for numwebpurchases :
+## There is a statistically significant difference in the mean numwebpurchases between customers who responded and those who did not (p-value = 2.052694e-12 )
+## ---------------------------------------------------
+## Analyzing attribute: numcatalogpurchases</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  numcatalogpurchases by as.factor(response)
+## t = -8.6493, df = 322.59, p-value = 2.481e-16
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -1.764339 -1.110447
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        1.936170        3.373563 
+## 
+## Interpretation for numcatalogpurchases :
+## There is a statistically significant difference in the mean numcatalogpurchases between customers who responded and those who did not (p-value = 2.481333e-16 )
+## ---------------------------------------------------
+## Analyzing attribute: numstorepurchases</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  numstorepurchases by as.factor(response)
+## t = -1.453, df = 346.88, p-value = 0.1471
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -0.7044514  0.1058535
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        5.386525        5.685824 
+## 
+## Interpretation for numstorepurchases :
+## There is no statistically significant difference in the mean numstorepurchases between customers who responded and those who did not (p-value = 0.1471397 )
+## ---------------------------------------------------
+## Analyzing attribute: income</code></pre>
+<p><img src="javascript://" width="672"/><img src="javascript://" width="672"/></p>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  income by as.factor(response)
+## t = -5.2345, df = 315.64, p-value = 3.025e-07
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -10829.422  -4912.427
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        47444.83        55315.76 
+## 
+## Interpretation for income :
+## There is a statistically significant difference in the mean income between customers who responded and those who did not (p-value = 3.025185e-07 )
+## ---------------------------------------------------</code></pre>
+<pre class="r"><code>text</code></pre>
+<pre><code>## function (x, ...) 
+## UseMethod(&quot;text&quot;)
+## &lt;bytecode: 0x000001ba9e050bf8&gt;
+## &lt;environment: namespace:graphics&gt;</code></pre>
+</div>
+<div class="section level2">
+<h2>Conclusion</h2>
+<p>This analysis provides a framework for exploring the relationship
+between various customer spending and purchase attributes and the
+‘response’ variable. The t-tests offer insights into whether the
+marketing campaign was more effective for certain customer segments
+based on their spending and purchase habits. Consider the results and
+conduct further analysis as needed.</p>
+<div class="section level3">
+<h3>Key observations</h3>
+<ol style="list-style-type: decimal;">
+<li>Null hypothesis is rejected in case of attributes such as mntwines,
+mntfruits, mntmeatproducts, mntfishproducts, mntsweetproducts,
+mntgoldproducts,numwebpurchases,numcatalogpurchases, income.<br/>
+</li>
+<li>Null hypothesis is failed to reject in numdealpurchase,numstore
+purchase.</li>
+</ol>
+<p>Thus, Marketing has an impact on amount of wines, fruits, meat
+products, fish products, sweetproducts, goldproducts, number of
+webpurchases, number of catalog purchases and income i.e., There is a
+statistically significant difference in means for these attributes</p>
+<p>However, attrubutes number of deal purchases and store purchases
+doesnt have a statistically significant differenence in means w.r.t
+response i.e., marketing.</p>
+<p>Clearly amount spent on all the products increases w.r.t marketing
+proves that the marketing impacts the sales.</p>
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

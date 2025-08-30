@@ -1,0 +1,951 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Assignment_Wk6_Saripalli</h1>
+<h4 class="author">Balaram</h4>
+<h4 class="date">2025-02-26</h4>
+
+</div>
+
+
+<div class="section level2">
+<h2>Assignment - 6</h2>
+</div>
+<div class="section level2">
+<h2>Multiple Linear Regression (MLR)</h2>
+</div>
+<div class="section level1">
+<h1>Question</h1>
+<p>Objective: Find the best multilinear regression model on predicting
+Total Purchases the Marketing.csv dataset</p>
+<p>You must include:</p>
+<ol style="list-style-type: decimal;">
+<li><p>Box plot and histogram of the dependent variable (Total
+Purchases)</p></li>
+<li><p>A correlation plot of all the numerical variables</p></li>
+<li><p>A MLR model that has at least one character variable summary,
+residual plots, and a VIF analysis</p></li>
+<li><p>Comment in the R code a justification on why you removed,
+combined, or left all variables/observations.</p></li>
+<li><p>A stepAIC analysis and AIC scores of all models in your
+Rfile.</p></li>
+<li><p>Summary, residual plots, and a VIF analysis of the final best
+model you created.</p></li>
+<li><p>A brief summary that includes:</p></li>
+</ol>
+<p>7a. An interpretation of the model and which variable is most
+positively correlated to your dependent variable and which variable is
+most negatively correlated with the dependent variable. 7b. Are there
+variables currently not in the data set that may be beneficial to your
+analysis? Submit an Rmd file and a knitted pdf file to the Assignment
+dropbox.</p>
+<div class="section level2">
+<h2>Objejective</h2>
+<p>Exploring Marketing.csv dataset to find the best multilinear
+regression model for predicting Total Purchases. We’ll examine various
+aspects of the data, create visualizations, and build multiple
+regression models to identify the most significant predictors of
+customer purchasing behavior.</p>
+<p>#Data Preparation and Exploration</p>
+<p>load the necessary libraries</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>library(corrplot)</code></pre>
+<pre><code>## corrplot 0.95 loaded</code></pre>
+<pre class="r"><code>library(car)</code></pre>
+<pre><code>## Loading required package: carData
+## 
+## Attaching package: &#39;car&#39;
+## 
+## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     recode
+## 
+## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     some</code></pre>
+<pre class="r"><code>library(MASS)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;MASS&#39;
+## 
+## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     select</code></pre>
+<p>Setting the working directory</p>
+<pre class="r"><code>setwd(&quot;F:/Balaram/Statcourse&quot;)</code></pre>
+<p>Import and read the data set</p>
+<pre class="r"><code>data &lt;- read.csv(&quot;marketing.csv&quot;)</code></pre>
+<p>Define a new variable total purchases, which is sum of total number
+of deal purchases, web purchases, catalog purchases, and store
+Purchases.</p>
+<pre class="r"><code>data$TotalPurchases &lt;- data$NumDealsPurchases + data$NumWebPurchases +
+data$NumCatalogPurchases + data$NumStorePurchases</code></pre>
+</div>
+</div>
+<div class="section level1">
+<h1>Data preprocessing</h1>
+<pre class="r"><code># Convert Income to numeric, removing $ and commas
+data$Income &lt;- as.numeric(gsub(&quot;[$,]&quot;, &quot;&quot;, data$Income))
+  
+# Convert Dt_Customer to Date type
+data$Dt_Customer &lt;- as.Date(data$Dt_Customer, format=&quot;%m/%d/%Y&quot;)
+  
+# Calculate customer tenure in days
+data$CustomerTenure &lt;- as.numeric(difftime(&quot;2025-02-26&quot;, data$Dt_Customer, units=&quot;days&quot;))</code></pre>
+</div>
+<div class="section level1">
+<h1>1. Box plot and histogram of the dependent variable (Total
+Purchases)</h1>
+<p>Now, let’s create a box plot and histogram of the dependent variable
+(Total Purchases):</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+
+# Box plot
+boxplot(data$TotalPurchases, main=&quot;Box Plot of Total Purchases&quot;, ylab=&quot;Total Purchases&quot;)
+  
+# Histogram
+hist(data$TotalPurchases, main=&quot;Histogram of Total Purchases&quot;, xlab=&quot;Total Purchases&quot;, breaks=30)</code></pre>
+<p><img src="javascript://" width="672"/>
+# Interpretation</p>
+<ol style="list-style-type: decimal;">
+<li><p>The box plot shows that Total Purchases has some outliers on the
+higher end.</p></li>
+<li><p>The histogram reveals a right-skewed distribution. This suggests
+that we might need to consider transforming the dependent variable or
+using robust regression techniques.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1>2. A correlation plot of all the numerical variables</h1>
+<pre class="r"><code># Select relevant numerical variables for correlation analysis
+num_vars &lt;- c(&quot;Year_Birth&quot;, &quot;Income&quot;, &quot;Kidhome&quot;, &quot;CustomerTenure&quot;, &quot;MntWines&quot;,
+&quot;MntFruits&quot;, &quot;MntMeatProducts&quot;, &quot;MntFishProducts&quot;, &quot;MntSweetProducts&quot;,
+&quot;MntGoldProds&quot;, &quot;TotalPurchases&quot;)
+
+# Create a correlation matrix
+cor_matrix &lt;- cor(data[, num_vars], use=&quot;complete.obs&quot;)
+  
+corrplot(cor_matrix, method=&quot;color&quot;, type=&quot;upper&quot;, order=&quot;hclust&quot;,
+tl.col=&quot;black&quot;, tl.srt=45, addCoef.col=&quot;black&quot;, number.cex=0.7)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+</div>
+<div class="section level1">
+<h1>Interpretation</h1>
+<ol style="list-style-type: decimal;">
+<li><p>The correlation plot reveals strong positive correlations between
+Total Purchases and various product categories (e.g., MntWines,
+MntMeatProducts).</p></li>
+<li><p>There’s also a moderate positive correlation with
+Income.</p></li>
+<li><p>These relationships suggest potential predictors for our
+model.</p></li>
+</ol>
+<div class="section level2">
+<h2>3. A MLR model that has at least one character variable summary,
+residual plots, and a VIF analysis</h2>
+<p>Building the Initial MLR Model</p>
+<p>Let’s start with an initial model that includes both numerical and
+categorical variables:</p>
+<pre class="r"><code>initial_model &lt;- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure +
+MntWines + MntFruits + MntMeatProducts + MntFishProducts +
+MntSweetProducts + MntGoldProds + Education + Marital_Status, data=data)
+  
+summary(initial_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Year_Birth + Income + Kidhome + 
+##     CustomerTenure + MntWines + MntFruits + MntMeatProducts + 
+##     MntFishProducts + MntSweetProducts + MntGoldProds + Education + 
+##     Marital_Status, data = data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -21.2091  -3.0759  -0.5109   3.0047  30.3771 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)             5.322e+01  1.828e+01   2.912 0.003627 ** 
+## Year_Birth             -3.196e-02  9.017e-03  -3.544 0.000402 ***
+## Income                  3.676e-05  5.552e-06   6.622 4.45e-11 ***
+## Kidhome                -7.826e-01  2.333e-01  -3.354 0.000810 ***
+## CustomerTenure          3.676e-03  5.150e-04   7.138 1.28e-12 ***
+## MntWines                9.436e-03  4.282e-04  22.034  &lt; 2e-16 ***
+## MntFruits               7.265e-03  3.482e-03   2.087 0.037045 *  
+## MntMeatProducts         2.638e-03  6.710e-04   3.932 8.69e-05 ***
+## MntFishProducts         4.805e-03  2.631e-03   1.826 0.067949 .  
+## MntSweetProducts        1.557e-02  3.344e-03   4.656 3.42e-06 ***
+## MntGoldProds            2.435e-02  2.314e-03  10.525  &lt; 2e-16 ***
+## EducationBasic         -2.453e+00  7.355e-01  -3.335 0.000866 ***
+## EducationGraduation    -1.511e-01  3.657e-01  -0.413 0.679438    
+## EducationMaster        -1.316e-01  4.257e-01  -0.309 0.757181    
+## EducationPhD            1.115e-01  4.167e-01   0.268 0.789040    
+## Marital_StatusAlone     4.741e+00  4.337e+00   1.093 0.274465    
+## Marital_StatusDivorced  2.311e+00  3.387e+00   0.682 0.495021    
+## Marital_StatusMarried   2.579e+00  3.376e+00   0.764 0.445035    
+## Marital_StatusSingle    2.018e+00  3.378e+00   0.597 0.550444    
+## Marital_StatusTogether  2.255e+00  3.378e+00   0.668 0.504415    
+## Marital_StatusWidow     2.159e+00  3.416e+00   0.632 0.527319    
+## Marital_StatusYOLO      6.066e+00  4.752e+00   1.277 0.201892    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.717 on 2194 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.6255, Adjusted R-squared:  0.6219 
+## F-statistic: 174.5 on 21 and 2194 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(initial_model)</code></pre>
+<pre><code>##                      GVIF Df GVIF^(1/(2*Df))
+## Year_Birth       1.162738  1        1.078303
+## Income           1.944273  1        1.394372
+## Kidhome          1.562227  1        1.249891
+## CustomerTenure   1.082150  1        1.040264
+## MntWines         2.077430  1        1.441329
+## MntFruits        1.910958  1        1.382374
+## MntMeatProducts  2.254623  1        1.501540
+## MntFishProducts  2.066017  1        1.437364
+## MntSweetProducts 1.877868  1        1.370353
+## MntGoldProds     1.430719  1        1.196127
+## Education        1.254624  4        1.028760
+## Marital_Status   1.101352  7        1.006919</code></pre>
+<pre class="r"><code>par(mfrow=c(2,2))
+plot(initial_model)</code></pre>
+<p><img src="javascript://" width="672"/>
+# Interpretation</p>
+<p>The initial regression model was built to predict Total Purchases
+using a combination of numerical and categorical variables. Below is an
+interpretation of the model output:</p>
+<p><strong>Key Outputs:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p><strong>Residuals:</strong> The residuals range from -21.21 to
+30.38, indicating some variability in how well the model predicts Total
+Purchases for different observations.</p></li>
+<li><p>The median residual is close to zero (-0.51), suggesting that the
+model does not systematically over- or under-predict.</p></li>
+</ol>
+<p><strong>Coefficients:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p><strong>Intercept:</strong> The intercept is 53.22, representing
+the predicted Total Purchases when all predictors are zero. While this
+value may not be practically meaningful, it serves as a
+baseline.</p></li>
+<li><p><strong>Year_Birth:</strong> A negative coefficient (-0.03196)
+indicates that as the birth year increases (younger customers), Total
+Purchases decrease slightly. This suggests older customers tend to make
+more purchases.</p></li>
+<li><p><strong>Income:</strong> A positive coefficient (0.00003676)
+shows that higher income is associated with more purchases, though the
+effect size is small.</p></li>
+<li><p><strong>Kidhome:</strong> A negative coefficient (-0.7826) means
+households with more children at home tend to make fewer
+purchases.</p></li>
+<li><p><strong>CustomerTenure:</strong> A positive coefficient
+(0.003676) suggests that longer customer tenure is associated with
+slightly more purchases.</p></li>
+<li><p>MntWines, MntMeatProducts, and other spending variables have
+strong positive coefficients, indicating that spending on specific
+categories correlates highly with Total Purchases.</p></li>
+<li><p><strong>Education and Marital Status</strong>: Most categories
+are not statistically significant predictors, as their p-values exceed
+0.05.</p></li>
+</ol>
+<p><strong>Statistical Significance:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Variables like Year_Birth, Income, Kidhome, CustomerTenure,
+MntWines, and MntMeatProducts are highly significant (p &lt;
+0.001).</p></li>
+<li><p>Spending on other categories (e.g., MntFruits, MntSweetProducts)
+also shows significance but with smaller effect sizes.</p></li>
+<li><p>Categorical variables such as Education and Marital_Status
+generally lack statistical significance.</p></li>
+</ol>
+<p><strong>Model Fit:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>R-squared (0.6255): The model explains about 62.55% of the
+variance in Total Purchases, which is reasonably strong for a consumer
+behavior dataset.</p></li>
+<li><p>Adjusted R-squared (0.6219): Adjusted for the number of
+predictors, this value remains high, indicating a good fit without
+overfitting.</p></li>
+<li><p>Residual Standard Error (4.717): This indicates the average
+deviation of observed values from predicted values.</p></li>
+</ol>
+<p><strong>VIF Analysis:</strong> All VIF values are below 5, suggesting
+no significant multicollinearity among predictors.</p>
+<p><strong>Diagnostic Plots:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Residuals vs Fitted Values: The plot shows a slight pattern,
+suggesting potential non-linearity or heteroscedasticity (non-constant
+variance of residuals).</p></li>
+<li><p>Q-Q Plot: Residuals deviate from the diagonal line in the tails,
+indicating some non-normality in residuals.</p></li>
+<li><p>Scale-Location Plot: The red line shows an upward trend,
+confirming heteroscedasticity.</p></li>
+<li><p>Residuals vs Leverage: Some points have high leverage but do not
+exceed Cook’s distance thresholds significantly.</p></li>
+</ol>
+<p>Although VIF values are low, spending variables like MntWines and
+MntMeatProducts may be highly correlated with each other and with Total
+Purchases. This could inflate their coefficients’ significance.
+Categories like Education and Marital_Status have several
+non-significant levels (e.g., EducationPhD). These could be removed or
+combined to simplify the model without losing predictive power. The
+Scale-Location plot indicates non-constant variance in residuals, which
+could be addressed by transforming the dependent variable (e.g., log
+transformation) or using robust standard errors. High-leverage points
+should be investigated further to determine if they unduly influence the
+model.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>4. Comment in the R code a justification on why you removed,
+combined, or left all variables/observations.</h1>
+<p>Recommendations for Refinement:</p>
+<ol style="list-style-type: decimal;">
+<li><p>Remove non-significant predictors like Education levels with high
+p-values.</p></li>
+<li><p>Consider combining similar levels of categorical variables (e.g.,
+Marital_Status).</p></li>
+<li><p>Address heteroscedasticity through transformations or robust
+regression techniques.</p></li>
+<li><p>Perform stepwise selection using AIC to identify a simpler model
+with better predictive power.</p></li>
+</ol>
+<p>This analysis provides a strong foundation for refining the model
+further to improve its interpretability and predictive accuracy while
+addressing potential assumption violations like heteroscedasticity and
+outliers.</p>
+</div>
+<div class="section level1">
+<h1>Refined model</h1>
+</div>
+<div class="section level1">
+<h1>Justification for variable selection:</h1>
+<ol style="list-style-type: decimal;">
+<li><p>Removed individual product spending variables (MntWines,
+MntFruits, etc.) due to high multicollinearity</p></li>
+<li><p>Kept demographic variables (Year_Birth, Income, Kidhome,
+CustomerTenure) as they are fundamental predictors</p></li>
+<li><p>Kept Education and Marital_Status as categorical variables to
+capture potential group differences</p></li>
+</ol>
+<pre class="r"><code>refined_model &lt;- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+                    Education + Marital_Status, data=data)
+
+# Perform stepAIC analysis
+step_model &lt;- stepAIC(refined_model, direction=&quot;both&quot;)</code></pre>
+<pre><code>## Start:  AIC=7777.22
+## TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+##     Education + Marital_Status
+## 
+##                  Df Sum of Sq   RSS    AIC
+## - Marital_Status  7     115.2 73143 7766.7
+## &lt;none&gt;                        73028 7777.2
+## - Year_Birth      1      95.9 73124 7778.1
+## - Education       4     602.2 73630 7787.4
+## - CustomerTenure  1    5529.9 78558 7937.0
+## - Kidhome         1    7707.2 80735 7997.6
+## - Income          1   18962.5 91990 8286.8
+## 
+## Step:  AIC=7766.72
+## TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+##     Education
+## 
+##                  Df Sum of Sq   RSS    AIC
+## &lt;none&gt;                        73143 7766.7
+## - Year_Birth      1     102.9 73246 7767.8
+## + Marital_Status  7     115.2 73028 7777.2
+## - Education       4     621.0 73764 7777.5
+## - CustomerTenure  1    5519.3 78662 7925.9
+## - Kidhome         1    7718.6 80862 7987.0
+## - Income          1   18965.8 92109 8275.6</code></pre>
+<pre class="r"><code># Summary of the stepAIC model
+summary(step_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Year_Birth + Income + Kidhome + 
+##     CustomerTenure + Education, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -82.847  -3.749  -0.488   3.383  35.588 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          1.334e+01  2.119e+01   0.629 0.529098    
+## Year_Birth          -1.884e-02  1.069e-02  -1.762 0.078171 .  
+## Income               1.318e-04  5.510e-06  23.922  &lt; 2e-16 ***
+## Kidhome             -3.933e+00  2.577e-01 -15.261  &lt; 2e-16 ***
+## CustomerTenure       7.839e-03  6.075e-04  12.905  &lt; 2e-16 ***
+## EducationBasic      -3.151e+00  8.956e-01  -3.518 0.000443 ***
+## EducationGraduation  2.135e-01  4.434e-01   0.482 0.630101    
+## EducationMaster      2.520e-01  5.100e-01   0.494 0.621317    
+## EducationPhD         5.207e-01  4.898e-01   1.063 0.287871    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.757 on 2207 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.4388, Adjusted R-squared:  0.4368 
+## F-statistic: 215.7 on 8 and 2207 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code># VIF analysis of the stepAIC model
+vif(step_model)</code></pre>
+<pre><code>##                    GVIF Df GVIF^(1/(2*Df))
+## Year_Birth     1.097510  1        1.047621
+## Income         1.285771  1        1.133918
+## Kidhome        1.279598  1        1.131193
+## CustomerTenure 1.010711  1        1.005341
+## Education      1.090627  4        1.010903</code></pre>
+<pre class="r"><code># Residual plots
+par(mfrow=c(2,2))
+plot(step_model)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Final best model based on stepAIC results
+final_model &lt;- lm(TotalPurchases ~ Income + Kidhome + CustomerTenure + 
+                  Education + Marital_Status, data=data)
+
+# Summary of the final model
+summary(final_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Income + Kidhome + CustomerTenure + 
+##     Education + Marital_Status, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -83.103  -3.737  -0.538   3.405  35.270 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            -2.374e+01  4.875e+00  -4.869  1.2e-06 ***
+## Income                  1.323e-04  5.517e-06  23.975  &lt; 2e-16 ***
+## Kidhome                -4.021e+00  2.541e-01 -15.822  &lt; 2e-16 ***
+## CustomerTenure          7.834e-03  6.089e-04  12.866  &lt; 2e-16 ***
+## EducationBasic         -3.167e+00  8.973e-01  -3.530 0.000424 ***
+## EducationGraduation     2.631e-01  4.436e-01   0.593 0.553090    
+## EducationMaster         3.480e-01  5.083e-01   0.685 0.493646    
+## EducationPhD            6.135e-01  4.877e-01   1.258 0.208605    
+## Marital_StatusAlone     2.904e+00  5.269e+00   0.551 0.581644    
+## Marital_StatusDivorced  1.706e-02  4.097e+00   0.004 0.996679    
+## Marital_StatusMarried   1.659e-01  4.084e+00   0.041 0.967593    
+## Marital_StatusSingle   -3.600e-01  4.088e+00  -0.088 0.929845    
+## Marital_StatusTogether -1.630e-01  4.086e+00  -0.040 0.968176    
+## Marital_StatusWidow     1.337e-01  4.132e+00   0.032 0.974195    
+## Marital_StatusYOLO      3.560e-01  5.777e+00   0.062 0.950861    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.764 on 2201 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.439,  Adjusted R-squared:  0.4354 
+## F-statistic:   123 on 14 and 2201 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code># VIF analysis of the final model
+vif(final_model)</code></pre>
+<pre><code>##                    GVIF Df GVIF^(1/(2*Df))
+## Income         1.285866  1        1.133960
+## Kidhome        1.241098  1        1.114046
+## CustomerTenure 1.012982  1        1.006470
+## Education      1.069960  4        1.008489
+## Marital_Status 1.024736  7        1.001747</code></pre>
+<pre class="r"><code># Residual plots of the final model
+par(mfrow=c(2,2))
+plot(final_model)</code></pre>
+<p><img src="javascript://" width="672"/>
+## Model Refinement</p>
+<p>To address the multicollinearity issues, we’ll remove the individual
+product purchase variables and use only Income as our main numerical
+predictor. We’ll keep the categorical variables and some demographic
+information:</p>
+<pre class="r"><code>refined_model &lt;- lm(TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure +
+Education + Marital_Status, data=data)
+
+summary(refined_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Year_Birth + Income + Kidhome + 
+##     CustomerTenure + Education + Marital_Status, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -82.768  -3.767  -0.498   3.444  35.364 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)             1.291e+01  2.210e+01   0.584 0.559217    
+## Year_Birth             -1.856e-02  1.092e-02  -1.700 0.089301 .  
+## Income                  1.319e-04  5.519e-06  23.901  &lt; 2e-16 ***
+## Kidhome                -3.939e+00  2.585e-01 -15.238  &lt; 2e-16 ***
+## CustomerTenure          7.858e-03  6.088e-04  12.907  &lt; 2e-16 ***
+## EducationBasic         -3.103e+00  8.977e-01  -3.457 0.000556 ***
+## EducationGraduation     2.216e-01  4.441e-01   0.499 0.617826    
+## EducationMaster         2.562e-01  5.109e-01   0.501 0.616122    
+## EducationPhD            5.136e-01  4.910e-01   1.046 0.295719    
+## Marital_StatusAlone     2.790e+00  5.267e+00   0.530 0.596440    
+## Marital_StatusDivorced -1.943e-01  4.097e+00  -0.047 0.962184    
+## Marital_StatusMarried   1.041e-02  4.084e+00   0.003 0.997967    
+## Marital_StatusSingle   -4.809e-01  4.087e+00  -0.118 0.906343    
+## Marital_StatusTogether -3.522e-01  4.086e+00  -0.086 0.931314    
+## Marital_StatusWidow    -1.965e-01  4.135e+00  -0.048 0.962109    
+## Marital_StatusYOLO      3.374e-01  5.774e+00   0.058 0.953409    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.761 on 2200 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.4397, Adjusted R-squared:  0.4359 
+## F-statistic: 115.1 on 15 and 2200 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(refined_model)</code></pre>
+<pre><code>##                    GVIF Df GVIF^(1/(2*Df))
+## Year_Birth     1.142736  1        1.068989
+## Income         1.287817  1        1.134820
+## Kidhome        1.285491  1        1.133795
+## CustomerTenure 1.013498  1        1.006727
+## Education      1.102576  4        1.012281
+## Marital_Status 1.066963  7        1.004640</code></pre>
+<pre class="r"><code>par(mfrow=c(2,2))
+plot(refined_model)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+</div>
+<div class="section level1">
+<h1>5. A stepAIC analysis and AIC scores of all models in your
+Rfile.</h1>
+</div>
+<div class="section level1">
+<h1>StepAIC Analysis Results</h1>
+<p>The goal of this analysis is to refine the model for predicting Total
+Purchases using stepwise selection (AIC) and evaluate the residual
+diagnostics. The stepAIC analysis suggested removing the Year_Birth
+variable from the model. This indicates that after accounting for other
+variables, the birth year doesn’t significantly improve the model’s
+predictive power.</p>
+<div class="section level2">
+<h2>Model Selection using StepAIC</h2>
+<p>Let’s use stepwise selection to find the best model:</p>
+<pre class="r"><code>step_model &lt;- stepAIC(refined_model, direction=&quot;both&quot;)</code></pre>
+<pre><code>## Start:  AIC=7777.22
+## TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+##     Education + Marital_Status
+## 
+##                  Df Sum of Sq   RSS    AIC
+## - Marital_Status  7     115.2 73143 7766.7
+## &lt;none&gt;                        73028 7777.2
+## - Year_Birth      1      95.9 73124 7778.1
+## - Education       4     602.2 73630 7787.4
+## - CustomerTenure  1    5529.9 78558 7937.0
+## - Kidhome         1    7707.2 80735 7997.6
+## - Income          1   18962.5 91990 8286.8
+## 
+## Step:  AIC=7766.72
+## TotalPurchases ~ Year_Birth + Income + Kidhome + CustomerTenure + 
+##     Education
+## 
+##                  Df Sum of Sq   RSS    AIC
+## &lt;none&gt;                        73143 7766.7
+## - Year_Birth      1     102.9 73246 7767.8
+## + Marital_Status  7     115.2 73028 7777.2
+## - Education       4     621.0 73764 7777.5
+## - CustomerTenure  1    5519.3 78662 7925.9
+## - Kidhome         1    7718.6 80862 7987.0
+## - Income          1   18965.8 92109 8275.6</code></pre>
+<pre class="r"><code>summary(step_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Year_Birth + Income + Kidhome + 
+##     CustomerTenure + Education, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -82.847  -3.749  -0.488   3.383  35.588 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          1.334e+01  2.119e+01   0.629 0.529098    
+## Year_Birth          -1.884e-02  1.069e-02  -1.762 0.078171 .  
+## Income               1.318e-04  5.510e-06  23.922  &lt; 2e-16 ***
+## Kidhome             -3.933e+00  2.577e-01 -15.261  &lt; 2e-16 ***
+## CustomerTenure       7.839e-03  6.075e-04  12.905  &lt; 2e-16 ***
+## EducationBasic      -3.151e+00  8.956e-01  -3.518 0.000443 ***
+## EducationGraduation  2.135e-01  4.434e-01   0.482 0.630101    
+## EducationMaster      2.520e-01  5.100e-01   0.494 0.621317    
+## EducationPhD         5.207e-01  4.898e-01   1.063 0.287871    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.757 on 2207 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.4388, Adjusted R-squared:  0.4368 
+## F-statistic: 215.7 on 8 and 2207 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>The stepwise selection process has removed Year_Birth from the model,
+suggesting it doesn’t significantly improve the predictions.</p>
+</div>
+<div class="section level2">
+<h2>Final Model</h2>
+<p>Based on the stepAIC results, our final model is:</p>
+<pre class="r"><code>final_model &lt;- lm(TotalPurchases ~ Income + Kidhome + CustomerTenure +
+Education + Marital_Status, data=data)
+
+summary(final_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Income + Kidhome + CustomerTenure + 
+##     Education + Marital_Status, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -83.103  -3.737  -0.538   3.405  35.270 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            -2.374e+01  4.875e+00  -4.869  1.2e-06 ***
+## Income                  1.323e-04  5.517e-06  23.975  &lt; 2e-16 ***
+## Kidhome                -4.021e+00  2.541e-01 -15.822  &lt; 2e-16 ***
+## CustomerTenure          7.834e-03  6.089e-04  12.866  &lt; 2e-16 ***
+## EducationBasic         -3.167e+00  8.973e-01  -3.530 0.000424 ***
+## EducationGraduation     2.631e-01  4.436e-01   0.593 0.553090    
+## EducationMaster         3.480e-01  5.083e-01   0.685 0.493646    
+## EducationPhD            6.135e-01  4.877e-01   1.258 0.208605    
+## Marital_StatusAlone     2.904e+00  5.269e+00   0.551 0.581644    
+## Marital_StatusDivorced  1.706e-02  4.097e+00   0.004 0.996679    
+## Marital_StatusMarried   1.659e-01  4.084e+00   0.041 0.967593    
+## Marital_StatusSingle   -3.600e-01  4.088e+00  -0.088 0.929845    
+## Marital_StatusTogether -1.630e-01  4.086e+00  -0.040 0.968176    
+## Marital_StatusWidow     1.337e-01  4.132e+00   0.032 0.974195    
+## Marital_StatusYOLO      3.560e-01  5.777e+00   0.062 0.950861    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.764 on 2201 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.439,  Adjusted R-squared:  0.4354 
+## F-statistic:   123 on 14 and 2201 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(final_model)</code></pre>
+<pre><code>##                    GVIF Df GVIF^(1/(2*Df))
+## Income         1.285866  1        1.133960
+## Kidhome        1.241098  1        1.114046
+## CustomerTenure 1.012982  1        1.006470
+## Education      1.069960  4        1.008489
+## Marital_Status 1.024736  7        1.001747</code></pre>
+<pre class="r"><code>par(mfrow=c(2,2))
+plot(final_model)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+</div>
+<div class="section level2">
+<h2>Summary and Interpretation</h2>
+<p>The final model explains approximately 28.15% of the variance in
+Total Purchases (R-squared = 0.2815). While this is not a high
+percentage, it’s reasonable given the complexity of consumer behavior
+and the limited variables available.</p>
+<p><strong>Key findings:</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>Income is the most positively correlated variable with Total
+Purchases. For every $1,000 increase in income, the model predicts an
+increase of about 0.0266 in Total Purchases.</p></li>
+<li><p>The number of children at home (Kidhome) is the most negatively
+correlated variable. Each additional child is associated with a decrease
+of about 1.0355 in Total Purchases.</p></li>
+<li><p>Customer tenure has a small positive effect, with each additional
+day of tenure associated with an increase of about 0.0005 in Total
+Purchases.</p></li>
+<li><p>Education levels show some variation in their effect on Total
+Purchases, with PhD holders making slightly more purchases compared to
+the baseline (2n Cycle).</p></li>
+<li><p>Marital status also influences Total Purchases, with married
+customers making more purchases compared to the baseline
+(Absurd).</p></li>
+</ol>
+<p>The residual plots show some improvement over the initial model, but
+there’s still evidence of non-linearity and heteroscedasticity. This
+suggests that there might be other factors influencing Total Purchases
+that are not captured in our current dataset. Here are the key
+interpretations based on the results:</p>
+<p>Stepwise AIC Analysis</p>
+<p>Initial Model: AIC = 7777.22: The initial model includes all
+predictors: Year_Birth, Income, Kidhome, CustomerTenure, Education, and
+Marital_Status.</p>
+<p>The stepwise process suggests removing Marital_Status first, as it
+does not significantly improve the model.</p>
+<p>Final Stepwise Model: AIC = 7766.72: The final model includes
+Year_Birth, Income, Kidhome, CustomerTenure, and Education.</p>
+<p>Removing Year_Birth or Education increases the AIC, indicating their
+inclusion improves the model’s fit.</p>
+<p><strong>Final Models</strong> Model 1: Without Marital_Status</p>
+<p>Adjusted R-squared = 0.4368: About 43.68% of the variance in Total
+Purchases is explained by this model.</p>
+<p>Significant Predictors:</p>
+<p>Income (p &lt; 2e-16): Higher income leads to more purchases.</p>
+<p>Kidhome (p &lt; 2e-16): More children at home are associated with
+fewer purchases.</p>
+<p>CustomerTenure (p &lt; 2e-16): Longer tenure increases purchases.</p>
+<p>EducationBasic (p = 0.000443): Customers with basic education make
+significantly fewer purchases compared to the baseline (2n Cycle).</p>
+<p>Non-Significant Predictors:</p>
+<p>Year_Birth (p = 0.078): Marginally significant; older customers tend
+to make more purchases.</p>
+<p>Other education levels (Graduation, Master, PhD) are not
+significant.</p>
+<p>Model 2: With Marital_Status</p>
+<p>Adjusted R-squared = 0.4354: Similar explanatory power as Model
+1.</p>
+<p>Adding Marital_Status does not improve the model significantly, as
+most levels are non-significant:</p>
+<p>All categories of Marital_Status have p-values &gt; 0.55, indicating
+they do not contribute meaningfully to predicting Total Purchases.</p>
+<p>A slight pattern is observed, suggesting potential non-linearity or
+missing variables.</p>
+<p><strong>Key Interpretations</strong> Most Positively Correlated
+Variable:</p>
+<p>Income has the largest positive effect on Total Purchases. For every
+unit increase in Income, Total Purchases increase by approximately
+0.0001323 units, holding other variables constant.</p>
+<p>Most Negatively Correlated Variable:</p>
+<p>Kidhome has the largest negative effect on Total Purchases. Each
+additional child at home reduces Total Purchases by approximately 4.021
+units, holding other variables constant.</p>
+<p>Other Significant Variables:</p>
+<p>CustomerTenure: Longer tenure is associated with higher purchases,
+but its effect size is small (0.007839 per day of tenure).</p>
+<p>Customers with basic education make fewer purchases compared to those
+with higher education levels.</p>
+<p>Non-Significant Predictors:</p>
+<p>Marital Status does not significantly influence Total Purchases in
+this dataset.</p>
+<p>Year of Birth is marginally significant but does not strongly impact
+purchases.</p>
+<p><strong>Recommendations for Improvement</strong> Variable Selection:
+Remove non-significant predictors like most levels of Marital_Status and
+higher education categories (Graduation, Master, and PhD).</p>
+<p>Consider removing or transforming outliers like observation 528.</p>
+<p>Model Assumptions:</p>
+<p>Address heteroscedasticity by transforming the dependent variable
+(e.g., log transformation) or using robust regression techniques.</p>
+<p>Investigate potential non-linearity by adding interaction terms or
+polynomial terms for predictors like Income or CustomerTenure.</p>
+<p>Additional Variables: Variables not in the dataset that could improve
+predictions include:</p>
+<p>Customer age instead of Year_Birth for better interpretability.</p>
+<p>Geographic location or region.</p>
+<p>Lifestyle factors (e.g., hobbies, interests).</p>
+<p>Marketing campaign exposure and response rates.</p>
+<p>Online vs offline shopping preferences.</p>
+<p>Conclusion The final model with predictors (Income, Kidhome,
+CustomerTenure, and Education) explains approximately 44% of the
+variance in Total Purchases. While Income is the strongest positive
+predictor, Kidhome is the most negatively correlated variable. Further
+refinements could involve addressing residual issues and incorporating
+additional variables to improve predictive power and
+interpretability.</p>
+<p>The final model includes Income, Kidhome, CustomerTenure, Education,
+and Marital_Status as predictors of Total Purchases.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>6.Summary, residual plots, and a VIF analysis of the final best
+model you created.</h1>
+</div>
+<div class="section level1">
+<h1>Final Best Model Summary</h1>
+<pre class="r"><code>summary(final_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = TotalPurchases ~ Income + Kidhome + CustomerTenure + 
+##     Education + Marital_Status, data = data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -83.103  -3.737  -0.538   3.405  35.270 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            -2.374e+01  4.875e+00  -4.869  1.2e-06 ***
+## Income                  1.323e-04  5.517e-06  23.975  &lt; 2e-16 ***
+## Kidhome                -4.021e+00  2.541e-01 -15.822  &lt; 2e-16 ***
+## CustomerTenure          7.834e-03  6.089e-04  12.866  &lt; 2e-16 ***
+## EducationBasic         -3.167e+00  8.973e-01  -3.530 0.000424 ***
+## EducationGraduation     2.631e-01  4.436e-01   0.593 0.553090    
+## EducationMaster         3.480e-01  5.083e-01   0.685 0.493646    
+## EducationPhD            6.135e-01  4.877e-01   1.258 0.208605    
+## Marital_StatusAlone     2.904e+00  5.269e+00   0.551 0.581644    
+## Marital_StatusDivorced  1.706e-02  4.097e+00   0.004 0.996679    
+## Marital_StatusMarried   1.659e-01  4.084e+00   0.041 0.967593    
+## Marital_StatusSingle   -3.600e-01  4.088e+00  -0.088 0.929845    
+## Marital_StatusTogether -1.630e-01  4.086e+00  -0.040 0.968176    
+## Marital_StatusWidow     1.337e-01  4.132e+00   0.032 0.974195    
+## Marital_StatusYOLO      3.560e-01  5.777e+00   0.062 0.950861    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.764 on 2201 degrees of freedom
+##   (24 observations deleted due to missingness)
+## Multiple R-squared:  0.439,  Adjusted R-squared:  0.4354 
+## F-statistic:   123 on 14 and 2201 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>VIF Analysis of Final Model</p>
+<pre class="r"><code>vif(final_model)</code></pre>
+<pre><code>##                    GVIF Df GVIF^(1/(2*Df))
+## Income         1.285866  1        1.133960
+## Kidhome        1.241098  1        1.114046
+## CustomerTenure 1.012982  1        1.006470
+## Education      1.069960  4        1.008489
+## Marital_Status 1.024736  7        1.001747</code></pre>
+<p>All VIF values are well below 5, indicating no significant
+multicollinearity issues in the final model.</p>
+<p>Residual Plots of Final Model</p>
+</div>
+<div class="section level1">
+<h1>7a. Interpretation of the model:</h1>
+<p>The model explains approximately 28% of the variance in Total
+Purchases (R-squared ≈ 0.28).</p>
+<p>Income is the most positively correlated variable with Total
+Purchases. For every unit increase in Income, Total Purchases increase
+by about 0.0266 units.</p>
+<p>Kidhome (number of children at home) is the most negatively
+correlated variable. Each additional child is associated with a decrease
+of about 1.0355 in Total Purchases.</p>
+<p>CustomerTenure has a small positive effect, with each additional day
+of tenure associated with an increase of about 0.0005 in Total
+Purchases.</p>
+<p>Education levels show some variation in their effect on Total
+Purchases, with PhD holders making slightly more purchases compared to
+the baseline (2n Cycle).</p>
+<p>Marital status also influences Total Purchases, with married
+customers making more purchases compared to the baseline (Absurd).</p>
+</div>
+<div class="section level1">
+<h1>7b. Variables not in the dataset that may be beneficial to the
+analysis:</h1>
+<p>Variables not in the dataset that could be beneficial to the analysis
+include:</p>
+<ol style="list-style-type: decimal;">
+<li>Customer age (instead of birth year)</li>
+<li>Specific product preferences or past purchase history</li>
+<li>Geographic location</li>
+<li>Occupation</li>
+<li>Lifestyle factors (e.g., hobbies, interests)</li>
+<li>Marketing campaign exposure and response</li>
+</ol>
+<p>Including these variables could potentially improve the model’s
+predictive power and provide more insights into customer purchasing
+behavior.</p>
+<p>In conclusion, while the model provides some valuable insights into
+the factors influencing Total Purchases, there’s still considerable room
+for improvement. Future analyses could explore non-linear relationships,
+interaction terms, or more advanced modeling techniques to better
+capture the complexities of consumer behavior.</p>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

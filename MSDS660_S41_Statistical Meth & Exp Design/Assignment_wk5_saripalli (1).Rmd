@@ -1,0 +1,255 @@
+---
+title: "Assignment_WK5_Saripalli"
+author: "Balaram"
+date: "2025-02-17"
+output: pdf_document
+---
+
+# Assignment Week 5 - ANOVA
+
+1. Form a hypothesis for variables that maybe related. 
+2. Write a null and alternative hypothesis
+3. Create a boxplot of your variables.
+4. Run ANOVA on variables in your hypothesis.
+5. Run a post hoc test to measure significant between factors
+6. Is there a significant interaction effect between the levels of each variable? Create at least one interaction plot.
+7. Test for ANOVA assumptions. 
+8. Does the analysis support the hypothesis you formed initially?
+9. Post your Rmd file and knitted pdf file to the assignment dropbox.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Marketing Data Analysis
+
+
+Setting the working directory
+```{r working directory}
+setwd("F:/Balaram/Statcourse")
+```
+
+Loading the required Packages
+```{r packages}
+library(tidyverse)
+library(car)
+library(ggplot2)
+```
+
+## 1. Form a hypothesis for variables that maybe related. 
+
+Based on the marketing dataset, We want to know weather the education levels, marital statuses, and age groups significantly affect the total amount spent on wine purchases.
+
+**Hypothesis formulation:** effect of education level, marital staus and age groups on the total amount spend
+
+**Factors considered:** education levels, marital statuses, and age groups. lets considered the effect of these factors on total amount spend.
+
+## 2. Write a null and alternative hypothesis
+
+**Null Hypothesis (H0):** There is no significant difference in total amount spent across different education levels, marital statuses, and age groups.
+
+**Alternative Hypothesis (H1):** There is a significant difference in total amount spent across different education levels, marital statuses, and age groups.
+
+# Read the data
+```{r read data}
+marketing_data <- read.csv("marketing.csv")
+View(marketing_data)
+```
+
+# # Create total amount spent variable
+As we are focusing on the total amount spent and that variable is not present in the data we are creating that variable which is equal to the sum of all the amounts spent on different products 
+```{r total amount}
+marketing_data$TotalAmountSpent <- marketing_data$MntWines + 
+                                   marketing_data$MntFruits + 
+                                   marketing_data$MntMeatProducts + 
+                                   marketing_data$MntFishProducts + 
+                                   marketing_data$MntSweetProducts + 
+                                   marketing_data$MntGoldProds
+```
+# Create age groups
+We are also creating a variable age group using the maximum value of Date of customer in the data (2013) - the year of birth and we break it in to 4 classes
+
+```{r age group}
+marketing_data$AgeGroup <- cut(2013 - marketing_data$Year_Birth, 
+                               breaks = c(0, 30, 45, 60, Inf), 
+                               labels = c("18-30", "31-45", "46-60", "60+"))
+```
+Data preprocessing  i.e., remove the missing values if any 
+
+```{r data preprocessing}
+# Remove rows with missing values
+marketing_data <- na.omit(marketing_data)
+```
+
+## 3. Create a boxplot of your variables.
+Boxplots are created to visualize the relationship between our variables:
+```{r box plots}
+# Boxplot for Education
+ggplot(marketing_data, aes(x = Education, y = TotalAmountSpent)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Total Amount Spent by Education Level",
+       x = "Education Level",
+       y = "Total Amount Spent")
+
+# Boxplot for Marital Status
+ggplot(marketing_data, aes(x = Marital_Status, y = TotalAmountSpent)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Total Amount Spent by Marital Status",
+       x = "Marital Status",
+       y = "Total Amount Spent")
+
+# Boxplot for Age Group
+ggplot(marketing_data, aes(x = AgeGroup, y = TotalAmountSpent)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Total Amount Spent by Age Group",
+       x = "Age Group",
+       y = "Total Amount Spent")
+```
+# Analysis of box plots
+Box plots were created to visualize the relationship between total amount spent and the variables of interest:
+
+**1. Education:** 
+- Spending increases with education level. Customers with "Basic" education spend the least, while those with "PhD" spend the most.
+
+- Significant differences were observed between groups (e.g., "Basic" vs. "PhD"), supporting the hypothesis that education affects total spending.
+
+
+**2. Marital Status:** 
+- Spending differences across marital statuses were minimal and not statistically significant.
+
+- This suggests that marital status does not strongly influence total spending.
+
+**Age Group:** 
+- Older age groups (46–60 and 60+) tend to spend more than younger groups (18–30 and 31–45).
+
+- Significant differences support the hypothesis that age influences spending.
+
+# 4. Run ANOVA on variables in your hypothesis.
+```{r ANOVA}
+anova_model <- aov(TotalAmountSpent ~ Education + Marital_Status + AgeGroup, data = marketing_data)
+summary(anova_model)
+```
+As we have done one- way ANOVA. we will get that weather these factors have significant effect on the total amount spent. 
+
+**Interpretation**
+The ANOVA results show which factors are statistically significant. Look for p-values < 0.05 to identify significant factors.
+
+Based on the 'p-values' the factors education and age group are statistically significant and marital status was not significant. 
+
+## 5. Run a post hoc test to measure significant between factors
+If ANOVA shows significant differences, we'll perform a Tukey HSD test:
+```{r post HOC}
+tukey_results <- TukeyHSD(anova_model)
+print(tukey_results)
+```
+Based on the Tukey multiple comparisons of means results, we can interpret the post-hoc analysis as follows:
+
+**Education**
+There are significant differences in total amount spent between several education levels:
+
+1. Basic education level spends significantly less than all other education levels (p < 0.05 for all comparisons with Basic).
+
+2. 2n Cycle education level spends significantly less than Graduation (p = 0.0497) and PhD (p = 0.0036).
+
+3. There are no significant differences between Graduation, Master, and PhD education levels.
+
+**Marital Status**
+
+1. No statistically significant differences were found between marital status groups in terms of total amount spent (all p-values > 0.05).
+
+2. The large p-values and wide confidence intervals suggest high variability within groups or small sample sizes for some categories (e.g., Absurd, Alone, YOLO).
+
+**Age Group**
+1. There are significant differences between some age groups:
+
+2. The 46-60 age group spends significantly more than the 31-45 age group (p = 0.0004).
+
+3. The 60+ age group spends significantly more than the 31-45 age group (p = 0.0002).
+
+4. There is a marginally significant difference between the 60+ and 18-30 age groups (p = 0.0717), with the 60+ group tending to spend more.
+
+5. No significant differences were found between other age group comparisons.
+
+**Overall Interpretation**
+1. Education level appears to have the most consistent impact on total amount spent, with Basic education level associated with significantly lower spending.
+
+2. Marital status does not seem to have a significant effect on total amount spent, though this could be due to high variability or small sample sizes in some categories.
+
+3. Age has some influence on spending, with older age groups (46-60 and 60+) tending to spend more than the 31-45 age group.
+
+These results suggest that marketing strategies might be most effectively tailored based on education level and age group rather than marital status.This is also in allignment with the one-way ANOVA analysis conducted. 
+
+
+## 6. Is there a significant interaction effect between the levels of each variable? Create at least one interaction plot.
+
+```{r interaction effects}
+interaction_model <- aov(TotalAmountSpent ~ Education * Marital_Status, data = marketing_data)
+summary(interaction_model)
+
+# Interaction plot
+interaction.plot(marketing_data$Education, marketing_data$Marital_Status, 
+                 marketing_data$TotalAmountSpent, 
+                 type = "b", 
+                 xlab = "Education", 
+                 ylab = "Total Amount Spent", 
+                 trace.label = "Marital Status",
+                 main = "Interaction between Education and Marital Status")
+```
+**Interpretation:** 
+
+The interaction plot visually suggests some variability in spending patterns across education levels and marital statuses, with "Basic" education consistently associated with the lowest spending and higher education levels (e.g., PhD) showing increased spending. This suggested that there is interaction effects.
+
+However, the p-value of 0.763 for the interaction effect indicates that these differences are not statistically significant. This means that the combined effect of education and marital status on total amount spent is likely due to random variation rather than a meaningful interaction.
+
+## 7. Test for ANOVA assumptions.
+
+ANOVA involves three major assumptions i.e., normality, homegenity of variances and levens test
+
+```{r ANOVA Assumptions}
+# Normality test
+qqnorm(residuals(anova_model))
+qqline(residuals(anova_model))
+
+# Homogeneity of variances
+plot(anova_model, which = 3)
+
+# Levene's test
+leveneTest(TotalAmountSpent ~ Education * Marital_Status * AgeGroup, data = marketing_data)
+```
+**Normal Q-Q Plot**
+The residuals mostly follow the diagonal line, indicating approximate normality.Deviations at the tails suggest some outliers or non-normality in extreme values.
+
+**Scale-Location Plot**
+The red trend line is slightly curved, indicating mild heteroscedasticity (non-constant variance).Variance appears to increase slightly with higher fitted values, but the deviation is not severe.
+Based on the Levene's test results provided, the p-value is < 2.2e-16, which is less than 0.05. This indicates that the test is statistically significant.
+
+**Levens test**
+The null hypothesis of Levene's test is that the variances are equal across groups.With a p-value < 0.05, we reject the null hypothesis. This means there is strong evidence that the variances are not equal across groups (i.e., there is heterogeneity of variances).
+
+As p is in the order of e-5, i,e, < 0.05 we can reject the null hypothesis thus, there is a significant variation between the variances across the groups. 
+
+
+**Conclusion**
+The assumptions of normality and homoscedasticity are slightly violated but not critically, so ANOVA results can still be interpreted with caution.
+
+
+## 8. Does the analysis support the hypothesis you formed initially?
+
+Based on the ANOVA results, we can determine whether to reject or fail to reject the null hypothesis. We'll interpret the p-values and effect sizes to understand the significance and magnitude of the relationships between our variables and total amount spent.
+
+The initial hypothesis was that education level, marital status, and age group affect total spending:
+
+1. Education: Supported – Education has a significant impact on total spending.
+
+2. Marital Status: Not Supported – Marital status does not significantly influence spending. (As p > 0.05)
+
+3. Age Group: Partially Supported – Age group significantly affects spending, but differences are more pronounced between specific groups.
+
+**Conclusions**
+
+- Education level and age group are significant factors influencing total spending, with higher education levels and older age groups associated with greater spending.
+
+- Marital status does not significantly impact total spending.

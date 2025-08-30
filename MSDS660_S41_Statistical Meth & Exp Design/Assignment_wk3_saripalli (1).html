@@ -1,0 +1,1275 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Assignment_Wk3_Saripalli</h1>
+<h4 class="date">2025-02-04</h4>
+
+</div>
+
+
+<div class="section level2">
+<h2>Assignment week 3</h2>
+</div>
+<div class="section level1">
+<h1>Question</h1>
+<p>Using the Pew Research Center’s data and the corresponding
+questionnaire, consider Q46. Investigate how personal data (age,
+education, income, etc.) are correlated to responses in Q46. Is there
+other correlation between Q20, Q22, and Q23?</p>
+<p>In the assignments folder post:</p>
+<p>Include the weight variable in your response estimates Plots
+(histogram, box, bar, scatter, etc.?) of the data. A brief explanation
+of your analysis process and your interpretation of the data. (What is
+the data, what did you do with the data, what do the results mean?) Your
+Rmd file and knitted html file</p>
+<div class="section level2">
+<h2>Solution</h2>
+<p>This report investigates two major questions 1. correlations between
+personal data (age, income, education) and responses to question Q46 2.
+correlations between questions Q20, Q22, and Q23.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>Install and check for survey package</h1>
+<pre class="r"><code>if (!require(survey)) {
+  install.packages(&#39;survey&#39;)
+  require(survey)
+}</code></pre>
+<pre><code>## Loading required package: survey</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## 
+## Attaching package: &#39;survey&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     dotchart</code></pre>
+<pre class="r"><code>if (!require(&quot;corrplot&quot;)) install.packages(&quot;corrplot&quot;)</code></pre>
+<pre><code>## Loading required package: corrplot</code></pre>
+<pre><code>## corrplot 0.95 loaded</code></pre>
+</div>
+<div class="section level1">
+<h1>Load the required libraries</h1>
+<pre class="r"><code>library(foreign)
+library(survey)
+library(knitr)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ tidyr::expand() masks Matrix::expand()
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ✖ tidyr::pack()   masks Matrix::pack()
+## ✖ tidyr::unpack() masks Matrix::unpack()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>library(corrplot)</code></pre>
+</div>
+<div class="section level1">
+<h1>Load the data file and convert it in to the csv file</h1>
+<pre class="r"><code>data &lt;-read.spss(&quot;ATP W82.sav&quot;, to.data.frame = TRUE)</code></pre>
+<pre><code>## Warning in read.spss(&quot;ATP W82.sav&quot;, to.data.frame = TRUE): Undeclared level(s)
+## 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 18, 20, 22, 25, 30, 33, 35, 36, 39, 40, 43,
+## 45, 49, 50, 51, 55, 60, 62, 65, 70, 75, 80, 85, 89, 90, 100 added in variable:
+## THERMCHINA_W82</code></pre>
+<pre><code>## Warning in read.spss(&quot;ATP W82.sav&quot;, to.data.frame = TRUE): Undeclared level(s)
+## 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 46, 47, 48,
+## 49, 50, 51, 52, 54, 55, 60, 62, 65, 67, 70, 73, 75, 80, 82, 85, 87, 89, 90, 91,
+## 95, 99, 100 added in variable: THERMINDIA_W82</code></pre>
+<pre><code>## Warning in read.spss(&quot;ATP W82.sav&quot;, to.data.frame = TRUE): Undeclared level(s)
+## 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 48, 49, 50, 51,
+## 55, 60, 65, 67, 68, 70, 75, 76, 77, 78, 80, 83, 85, 88, 90, 91, 92, 95, 98, 99,
+## 100 added in variable: THERMJAPAN_W82</code></pre>
+<pre><code>## Warning in read.spss(&quot;ATP W82.sav&quot;, to.data.frame = TRUE): Undeclared level(s)
+## 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 25, 28, 30, 32, 33, 35, 40,
+## 45, 49, 50, 60, 65, 68, 70, 75, 80, 85, 90, 99, 100 added in variable:
+## THERMNKOREA_W82</code></pre>
+<pre class="r"><code>names(data) &lt;- tolower(names(data))
+View(data)</code></pre>
+<p>We can do some of our basic EDA analysis here.</p>
+<pre class="r"><code># View(data)
+dim(data)</code></pre>
+<pre><code>## [1] 2596  147</code></pre>
+<pre class="r"><code>head(data)</code></pre>
+<pre><code>##     qkey interview_start_w82 interview_end_w82 device_type_w82 lang_w82
+## 1 101224         13831646843       13831647768      Smartphone  English
+## 2 101437         13831676407       13831677672       Laptop/PC  English
+## 3 102198         13832008929       13832010237       Laptop/PC  English
+## 4 103094         13831746354       13831747574      Smartphone  English
+## 5 104368         13831684961       13831689933       Laptop/PC  English
+## 6 104689         13831674283       13831675294      Smartphone  English
+##   form_w82   gap21q1_w82                               gap21q2_w82
+## 1   Form 2 Somewhat good Better off financially than their parents
+## 2   Form 2 Somewhat good  Worse off financially than their parents
+## 3   Form 1  Somewhat bad  Worse off financially than their parents
+## 4   Form 1 Somewhat good Better off financially than their parents
+## 5   Form 2 Somewhat good  Worse off financially than their parents
+## 6   Form 1 Somewhat good Better off financially than their parents
+##            gap21q3_w82      gap21q4_a_w82        gap21q4_b_w82
+## 1 Not at all satisfied               &lt;NA&gt;                 &lt;NA&gt;
+## 2 Not at all satisfied               &lt;NA&gt;                 &lt;NA&gt;
+## 3    Not too satisfied Somewhat favorable Somewhat unfavorable
+## 4   Somewhat satisfied     Very favorable     Very unfavorable
+## 5       Very satisfied               &lt;NA&gt;                 &lt;NA&gt;
+## 6       Very satisfied Somewhat favorable   Somewhat favorable
+##          gap21q4_c_w82      gap21q4_d_w82        gap21q4_e_w82
+## 1                 &lt;NA&gt;               &lt;NA&gt;                 &lt;NA&gt;
+## 2                 &lt;NA&gt;               &lt;NA&gt;                 &lt;NA&gt;
+## 3 Somewhat unfavorable   Very unfavorable Somewhat unfavorable
+## 4 Somewhat unfavorable   Very unfavorable              Refused
+## 5                 &lt;NA&gt;               &lt;NA&gt;                 &lt;NA&gt;
+## 6   Somewhat favorable Somewhat favorable   Somewhat favorable
+##          gap21q4_f_w82 thermchina_w82 thermindia_w82 thermjapan_w82
+## 1                 &lt;NA&gt;              0              0             50
+## 2                 &lt;NA&gt;              0             75             85
+## 3   Somewhat favorable           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 4 Somewhat unfavorable           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 5                 &lt;NA&gt;              3              8              9
+## 6   Somewhat favorable           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+##   thermnkorea_w82                          gap21q5_a_w82
+## 1               0 No, does not respect personal freedoms
+## 2              20 No, does not respect personal freedoms
+## 3            &lt;NA&gt; No, does not respect personal freedoms
+## 4            &lt;NA&gt; No, does not respect personal freedoms
+## 5               0 No, does not respect personal freedoms
+## 6            &lt;NA&gt;        Yes, respects personal freedoms
+##                            gap21q5_b_w82
+## 1 No, does not respect personal freedoms
+## 2 No, does not respect personal freedoms
+## 3        Yes, respects personal freedoms
+## 4        Yes, respects personal freedoms
+## 5        Yes, respects personal freedoms
+## 6        Yes, respects personal freedoms
+##                                                   gap21q6_w82 gap21q7_a_w82
+## 1 Used to be a good example, but has not been in recent years Somewhat good
+## 2 Used to be a good example, but has not been in recent years     Very good
+## 3 Used to be a good example, but has not been in recent years  Somewhat bad
+## 4 Used to be a good example, but has not been in recent years      Very bad
+## 5             Is a good example for other countries to follow      Very bad
+## 6             Is a good example for other countries to follow Somewhat good
+##   gap21q7_b_w82 gap21q7_c_w82 gap21q7_d_w82 gap21q7_e_w82   gap21q8_w82
+## 1      Very bad      Very bad Somewhat good      Very bad A fair amount
+## 2 Somewhat good Somewhat good  Somewhat bad Somewhat good    Not at all
+## 3 Somewhat good  Somewhat bad  Somewhat bad  Somewhat bad  A great deal
+## 4      Very bad  Somewhat bad Somewhat good      Very bad A fair amount
+## 5     Very good     Very good     Very good     Very good  Not too much
+## 6 Somewhat good Somewhat good Somewhat good Somewhat good A fair amount
+##                                         gap21q9_w82
+## 1 More DIVIDED than before the coronavirus outbreak
+## 2 More DIVIDED than before the coronavirus outbreak
+## 3 More DIVIDED than before the coronavirus outbreak
+## 4 More DIVIDED than before the coronavirus outbreak
+## 5 More DIVIDED than before the coronavirus outbreak
+## 6 More DIVIDED than before the coronavirus outbreak
+##                        gap21q10_w82
+## 1                Fewer restrictions
+## 2                Fewer restrictions
+## 3                Fewer restrictions
+## 4                 More restrictions
+## 5 The restrictions were about right
+## 6                 More restrictions
+##                                                                                                              gap21q11_w82
+## 1          Recovering from the effects of the coronavirus outbreak in ways that show the strengths of its economic system
+## 2          Recovering from the effects of the coronavirus outbreak in ways that show the strengths of its economic system
+## 3 Failing to recover from the effects of the coronavirus outbreak in ways that show the weaknesses of its economic system
+## 4 Failing to recover from the effects of the coronavirus outbreak in ways that show the weaknesses of its economic system
+## 5          Recovering from the effects of the coronavirus outbreak in ways that show the strengths of its economic system
+## 6          Recovering from the effects of the coronavirus outbreak in ways that show the strengths of its economic system
+##   gap21q12_w82                     gap21q13_a_w82         gap21q13_b_w82
+## 1 Not too much             It needs major changes It needs major changes
+## 2         Some             It needs minor changes It needs major changes
+## 3  None at all             It needs minor changes It needs major changes
+## 4         Some It needs to be completely reformed It needs major changes
+## 5 A great deal             It needs minor changes It needs minor changes
+## 6         Some             It needs major changes It needs minor changes
+##                       gap21q13_c_w82         gap21q14_w82 gap21q15_a_w82
+## 1 It needs to be completely reformed Not at all confident        Average
+## 2 It needs to be completely reformed   Somewhat confident       The best
+## 3             It needs major changes   Somewhat confident        Average
+## 4             It needs major changes   Somewhat confident        Average
+## 5      It doesn’t need to be changed                 &lt;NA&gt;       The best
+## 6             It needs major changes   Somewhat confident        Average
+##   gap21q15_b_w82 gap21q15_c_w82 gap21q15_d_w82 gap21q15_e_w82 gap21q15_f_w82
+## 1        Average        Average       The best  Above average  Below average
+## 2  Above average       The best       The best  Above average  Above average
+## 3  Above average       The best        Average        Average       The best
+## 4  Above average        Average       The best  Above average       The best
+## 5       The best       The best       The best       The best       The best
+## 6        Average        Average        Average        Average        Average
+##    gap21q17_w82
+## 1 A fair amount
+## 2  A great deal
+## 3 A fair amount
+## 4  A great deal
+## 5  Not too much
+## 6 A fair amount
+##                                                                                                  gap21q18_w82
+## 1                        Try to promote human rights in China, even if it harms economic relations with China
+## 2                        Try to promote human rights in China, even if it harms economic relations with China
+## 3                        Try to promote human rights in China, even if it harms economic relations with China
+## 4 Prioritize strengthening economic relations with China, even if it means not addressing human rights issues
+## 5                        Try to promote human rights in China, even if it harms economic relations with China
+## 6                        Try to promote human rights in China, even if it harms economic relations with China
+##            gap21q19_a_w82       gap21q19_b_w82          gap21q19_c_w82
+## 1 Not too much confidence No confidence at all    No confidence at all
+## 2    No confidence at all No confidence at all         Some confidence
+## 3 Not too much confidence No confidence at all    No confidence at all
+## 4     A lot of confidence No confidence at all    No confidence at all
+## 5         Some confidence No confidence at all    No confidence at all
+## 6         Some confidence      Some confidence Not too much confidence
+##            gap21q19_d_w82          gap21q19_e_w82           gap21q20_w82
+## 1 Not too much confidence Not too much confidence A better place to live
+## 2 Not too much confidence    No confidence at all  A worse place to live
+## 3 Not too much confidence Not too much confidence A better place to live
+## 4    No confidence at all    No confidence at all A better place to live
+## 5         Some confidence         Some confidence A better place to live
+## 6         Some confidence         Some confidence A better place to live
+##          gap21q21_a_w82            gap21q21_b_w82            gap21q21_c_w82
+## 1      Strong conflicts Not very strong conflicts Not very strong conflicts
+## 2      Strong conflicts Not very strong conflicts   There are not conflicts
+## 3 Very strong conflicts     Very strong conflicts          Strong conflicts
+## 4      Strong conflicts     Very strong conflicts          Strong conflicts
+## 5 Very strong conflicts Not very strong conflicts          Strong conflicts
+## 6      Strong conflicts Not very strong conflicts Not very strong conflicts
+##              gap21q21_d_w82            gap21q21_e_w82
+## 1 Not very strong conflicts Not very strong conflicts
+## 2 Not very strong conflicts Not very strong conflicts
+## 3 Not very strong conflicts Not very strong conflicts
+## 4          Strong conflicts     Very strong conflicts
+## 5     Very strong conflicts Not very strong conflicts
+## 6          Strong conflicts Not very strong conflicts
+##                  gap21q22_w82             gap21q23_w82         gap21q24_w82
+## 1 Disagree on the basic facts Somewhat serious problem    Not too concerned
+## 2 Disagree on the basic facts  Not too serious problem Not at all concerned
+## 3 Disagree on the basic facts Somewhat serious problem   Somewhat concerned
+## 4 Disagree on the basic facts     Very serious problem   Somewhat concerned
+## 5 Disagree on the basic facts Somewhat serious problem   Somewhat concerned
+## 6    Agree on the basic facts Somewhat serious problem   Somewhat concerned
+##        gap21q25_w82    gap21q26_a_w82    gap21q26_b_w82    gap21q26_c_w82
+## 1      Some changes Somewhat good job  Somewhat bad job      Very bad job
+## 2 No changes at all     Very good job  Somewhat bad job      Very bad job
+## 3      Some changes  Somewhat bad job  Somewhat bad job  Somewhat bad job
+## 4  A lot of changes Somewhat good job Somewhat good job  Somewhat bad job
+## 5      Some changes  Somewhat bad job  Somewhat bad job      Very bad job
+## 6  A lot of changes Somewhat good job Somewhat good job Somewhat good job
+##      gap21q26_d_w82                        gap21q27_w82         gap21q28_w82
+## 1  Somewhat bad job              Harm America’s economy    Not too confident
+## 2  Somewhat bad job              Harm America’s economy Not at all confident
+## 3 Somewhat good job              Harm America’s economy    Not too confident
+## 4 Somewhat good job           Benefit America’s economy       Very confident
+## 5 Somewhat good job              Harm America’s economy Not at all confident
+## 6 Somewhat good job Have no impact on America’s economy   Somewhat confident
+##                    gap21q29_w82    gap21q30_w82         gap21q31_w82
+## 1 Play a shared leadership role     Most active       Very important
+## 2  Not play any leadership role            &lt;NA&gt;   Somewhat important
+## 3 Play a shared leadership role About as active   Somewhat important
+## 4 Play a shared leadership role About as active Not at all important
+## 5 Play a shared leadership role About as active       Very important
+## 6 Play a shared leadership role     Most active   Somewhat important
+##               gap21q32_w82 gap21q33_a_w82 gap21q33_b_w82 gap21q33_c_w82
+## 1    A lot more negatively           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 2    A lot more negatively           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 3 A little more positively   Top priority  Some priority    No priority
+## 4    A lot more positively  Some priority  Some priority  Some priority
+## 5 A little more positively           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 6    A lot more positively  Some priority   Top priority   Top priority
+##   gap21q33_d_w82 gap21q33_e_w82 gap21q33_f_w82 gap21q33_g_w82 gap21q33_h_w82
+## 1           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 2           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 3  Some priority   Top priority  Some priority   Top priority   Top priority
+## 4  Some priority  Some priority  Some priority  Some priority   Top priority
+## 5           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 6  Some priority    No priority  Some priority  Some priority  Some priority
+##   gap21q33_i_w82 gap21q33_j_w82 gap21q33_k_w82 gap21q33_l_w82 gap21q33_m_w82
+## 1           &lt;NA&gt;           &lt;NA&gt;   Top priority  Some priority   Top priority
+## 2           &lt;NA&gt;           &lt;NA&gt;  Some priority   Top priority  Some priority
+## 3   Top priority    No priority           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 4  Some priority  Some priority           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 5           &lt;NA&gt;           &lt;NA&gt;   Top priority  Some priority   Top priority
+## 6   Top priority   Top priority           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+##   gap21q33_n_w82 gap21q33_o_w82 gap21q33_p_w82 gap21q33_q_w82 gap21q33_r_w82
+## 1   Top priority  Some priority   Top priority  Some priority  Some priority
+## 2   Top priority  Some priority   Top priority  Some priority  Some priority
+## 3           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 4           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+## 5  Some priority   Top priority  Some priority   Top priority  Some priority
+## 6           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;           &lt;NA&gt;
+##   gap21q33_s_w82 gap21q33_t_w82       gap21q34_a_w82       gap21q34_b_w82
+## 1   Top priority   Top priority Not at all confident Not at all confident
+## 2   Top priority   Top priority Not at all confident Not at all confident
+## 3           &lt;NA&gt;           &lt;NA&gt; Not at all confident Not at all confident
+## 4           &lt;NA&gt;           &lt;NA&gt;   Somewhat confident   Somewhat confident
+## 5  Some priority  Some priority    Not too confident    Not too confident
+## 6           &lt;NA&gt;           &lt;NA&gt;       Very confident       Very confident
+##         gap21q34_c_w82       gap21q34_d_w82       gap21q34_e_w82
+## 1 Not at all confident Not at all confident Not at all confident
+## 2 Not at all confident Not at all confident Not at all confident
+## 3 Not at all confident    Not too confident   Somewhat confident
+## 4       Very confident   Somewhat confident   Somewhat confident
+## 5    Not too confident    Not too confident    Not too confident
+## 6       Very confident       Very confident       Very confident
+##         gap21q34_f_w82
+## 1 Not at all confident
+## 2 Not at all confident
+## 3 Not at all confident
+## 4   Somewhat confident
+## 5 Not at all confident
+## 6       Very confident
+##                                                                            gap21q35_w82
+## 1 MANY of the problems facing our country can be solved by working with other countries
+## 2 MANY of the problems facing our country can be solved by working with other countries
+## 3 MANY of the problems facing our country can be solved by working with other countries
+## 4 MANY of the problems facing our country can be solved by working with other countries
+## 5  FEW of the problems facing our country can be solved by working with other countries
+## 6 MANY of the problems facing our country can be solved by working with other countries
+##                                                                                                               gap21q36_w82
+## 1              In foreign policy, the U.S. should follow its own national interests even when its allies strongly disagree
+## 2              In foreign policy, the U.S. should follow its own national interests even when its allies strongly disagree
+## 3 In foreign policy, the U.S. should take into account the interests of its allies even if it means making compromises wit
+## 4              In foreign policy, the U.S. should follow its own national interests even when its allies strongly disagree
+## 5 In foreign policy, the U.S. should take into account the interests of its allies even if it means making compromises wit
+## 6 In foreign policy, the U.S. should take into account the interests of its allies even if it means making compromises wit
+##                                                                                 gap21q37_w82
+## 1 We should pay less attention to problems overseas and concentrate on problems here at home
+## 2 We should pay less attention to problems overseas and concentrate on problems here at home
+## 3                      It’s best for the future of our country to be active in world affairs
+## 4                                                                                    Refused
+## 5                      It’s best for the future of our country to be active in world affairs
+## 6                      It’s best for the future of our country to be active in world affairs
+##   gap21q38_a_w82 gap21q38_b_w82 gap21q38_c_w82 gap21q40_w82  gap21q41_w82
+## 1   Not too much   Not too much   Not too much        Enemy  Somewhat bad
+## 2     Not at all     Not at all     Not at all        Enemy  Somewhat bad
+## 3  A fair amount   Not too much   Not too much   Competitor      Very bad
+## 4  A fair amount  A fair amount  A fair amount        Enemy Somewhat good
+## 5   Not too much   Not too much   Not too much   Competitor Somewhat good
+## 6   A great deal   A great deal   A great deal      Partner Somewhat good
+##                                                   gap21q42_w82
+## 1                Getting tougher with China on economic issues
+## 2                Getting tougher with China on economic issues
+## 3 Building a strong relationship with China on economic issues
+## 4                Getting tougher with China on economic issues
+## 5                Getting tougher with China on economic issues
+## 6 Building a strong relationship with China on economic issues
+##                 gap21q43_a_w82           gap21q43_b_w82
+## 1         Very serious problem     Very serious problem
+## 2         Very serious problem Somewhat serious problem
+## 3 Not too serious of a problem     Very serious problem
+## 4     Somewhat serious problem Somewhat serious problem
+## 5         Very serious problem     Very serious problem
+## 6     Somewhat serious problem Somewhat serious problem
+##             gap21q43_c_w82               gap21q43_d_w82
+## 1     Very serious problem Not too serious of a problem
+## 2     Very serious problem         Very serious problem
+## 3     Very serious problem Not too serious of a problem
+## 4 Somewhat serious problem         Very serious problem
+## 5 Somewhat serious problem         Very serious problem
+## 6 Somewhat serious problem     Somewhat serious problem
+##             gap21q43_e_w82               gap21q43_f_w82
+## 1     Very serious problem         Very serious problem
+## 2     Very serious problem     Somewhat serious problem
+## 3     Very serious problem         Very serious problem
+## 4     Very serious problem         Very serious problem
+## 5 Somewhat serious problem         Very serious problem
+## 6 Somewhat serious problem Not too serious of a problem
+##             gap21q43_g_w82               gap21q43_h_w82
+## 1     Very serious problem Not too serious of a problem
+## 2 Somewhat serious problem     Somewhat serious problem
+## 3     Very serious problem Not too serious of a problem
+## 4 Somewhat serious problem     Somewhat serious problem
+## 5     Very serious problem     Somewhat serious problem
+## 6 Somewhat serious problem     Somewhat serious problem
+##                gap21q44_w82              gap21q45_w82 gap21q46_w82
+## 1         Good for the U.S.   Good for you personally          Bad
+## 2         Good for the U.S.   Good for you personally          Bad
+## 3 No real effect either way No real effect either way         Good
+## 4 No real effect either way    Bad for you personally         Good
+## 5         Good for the U.S. No real effect either way         Good
+## 6 No real effect either way No real effect either way         Good
+##                                 gap21q47_w82          f_metro f_cregion
+## 1 Strongly support limiting Chinese students     Metropolitan     South
+## 2 Strongly support limiting Chinese students Non-metropolitan   Midwest
+## 3  Somewhat oppose limiting Chinese students     Metropolitan Northeast
+## 4  Strongly oppose limiting Chinese students     Metropolitan Northeast
+## 5 Somewhat support limiting Chinese students     Metropolitan     South
+## 6 Somewhat support limiting Chinese students Non-metropolitan   Midwest
+##          f_cdivision f_agecat f_gender             f_educcat
+## 1     South Atlantic      65+    A man H.S. graduate or less
+## 2 West North Central    50-64  A woman          Some College
+## 3    Middle Atlantic    18-29  A woman     College graduate+
+## 4    Middle Atlantic    30-49  A woman H.S. graduate or less
+## 5 West South Central      65+    A man H.S. graduate or less
+## 6 East North Central      65+  A woman H.S. graduate or less
+##                        f_educcat2 f_hisp f_hisp_origin
+## 1            High school graduate     No          &lt;NA&gt;
+## 2              Associate&#39;s degree     No          &lt;NA&gt;
+## 3 College graduate/some post grad     No          &lt;NA&gt;
+## 4            High school graduate     No          &lt;NA&gt;
+## 5            High school graduate     No          &lt;NA&gt;
+## 6            High school graduate     No          &lt;NA&gt;
+##                                             f_yearsinus f_racecmb
+## 1 Born in US (not including unincorporated territories)     White
+## 2 Born in US (not including unincorporated territories)     White
+## 3 Born in US (not including unincorporated territories)     White
+## 4 Born in US (not including unincorporated territories)     White
+## 5 Born in US (not including unincorporated territories)     White
+## 6 Born in US (not including unincorporated territories)     White
+##         f_racethnmod f_citizen f_birthplace2          f_marital        f_relig
+## 1 White non-Hispanic       Yes          U.S.            Married     Protestant
+## 2 White non-Hispanic       Yes          U.S.           Divorced     Protestant
+## 3 White non-Hispanic       Yes          U.S. Never been married     Protestant
+## 4 White non-Hispanic       Yes          U.S.           Divorced Roman Catholic
+## 5 White non-Hispanic       Yes          U.S.            Widowed     Protestant
+## 6 White non-Hispanic       Yes          U.S.            Widowed     Protestant
+##                                        f_born f_religcat1              f_attend
+## 1    Yes, born-again or evangelical Christian  Protestant More than once a week
+## 2    Yes, born-again or evangelical Christian  Protestant           Once a week
+## 3    Yes, born-again or evangelical Christian  Protestant More than once a week
+## 4 No, not born-again or evangelical Christian    Catholic    A few times a year
+## 5    Yes, born-again or evangelical Christian  Protestant More than once a week
+## 6 No, not born-again or evangelical Christian  Protestant           Once a week
+##   f_party_final      f_partyln_final f_partysum_final
+## 1    Republican                 &lt;NA&gt;     Rep/Lean Rep
+## 2    Republican                 &lt;NA&gt;     Rep/Lean Rep
+## 3    Republican                 &lt;NA&gt;     Rep/Lean Rep
+## 4   Independent The Republican Party     Rep/Lean Rep
+## 5   Independent The Republican Party     Rep/Lean Rep
+## 6      Democrat                 &lt;NA&gt;     Dem/Lean Dem
+##                   f_partysumideo                   f_inc_sdt1
+## 1          Conservative Rep/Lean $50,000 to less than $60,000
+## 2          Conservative Rep/Lean            Less than $30,000
+## 3          Conservative Rep/Lean             $100,000 or more
+## 4      Moderate/Liberal Rep/Lean $30,000 to less than $40,000
+## 5          Conservative Rep/Lean            Less than $30,000
+## 6 Moderate/Conservative Dem/Lean $30,000 to less than $40,000
+##                                                                                f_reg
+## 1 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+## 2 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+## 3 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+## 4 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+## 5 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+## 6 You are ABSOLUTELY CERTAIN that you are registered to vote at your current address
+##         f_ideo           f_intfreq f_volsum   f_inc_tier2 weight_w82
+## 1 Conservative Several times a day      Yes Middle income  0.4252950
+## 2 Conservative Several times a day       No  Lower income  0.9504922
+## 3 Conservative   Almost constantly      Yes  Upper income  0.9751115
+## 4     Moderate   Almost constantly       No  Lower income  0.4447333
+## 5 Conservative    About once a day      Yes Middle income  0.3977687
+## 6     Moderate    About once a day      Yes  Lower income  0.2834495
+##   weight_w73_w82
+## 1             NA
+## 2      0.8741116
+## 3             NA
+## 4      0.6180256
+## 5      0.4741942
+## 6      0.2635994</code></pre>
+<pre class="r"><code>summary(data)</code></pre>
+<pre><code>##       qkey           interview_start_w82 interview_end_w82  
+##  Min.   :1.012e+05   Min.   :1.383e+10   Min.   :1.383e+10  
+##  1st Qu.:2.015e+11   1st Qu.:1.383e+10   1st Qu.:1.383e+10  
+##  Median :2.018e+11   Median :1.383e+10   Median :1.383e+10  
+##  Mean   :1.692e+11   Mean   :1.383e+10   Mean   :1.383e+10  
+##  3rd Qu.:2.018e+11   3rd Qu.:1.383e+10   3rd Qu.:1.383e+10  
+##  Max.   :2.020e+11   Max.   :1.383e+10   Max.   :1.383e+10  
+##                                                             
+##           device_type_w82    lang_w82      form_w82           gap21q1_w82  
+##  Laptop/PC        : 992   English:2489   Form 1:1287   Very good    :  42  
+##  Smartphone       :1443   Spanish: 107   Form 2:1309   Somewhat good: 661  
+##  Tablet           : 160                                Somewhat bad :1353  
+##  SmartTV          :   1                                Very bad     : 539  
+##  None of the above:   0                                Refused      :   1  
+##                                                                            
+##                                                                            
+##                                     gap21q2_w82                 gap21q3_w82  
+##  Better off financially than their parents: 820   Very satisfied      : 146  
+##  Worse off financially than their parents :1753   Somewhat satisfied  : 920  
+##  Refused                                  :  23   Not too satisfied   :1022  
+##                                                   Not at all satisfied: 500  
+##                                                   Refused             :   8  
+##                                                                              
+##                                                                              
+##               gap21q4_a_w82               gap21q4_b_w82 
+##  Very favorable      : 412   Very favorable      :  16  
+##  Somewhat favorable  : 578   Somewhat favorable  : 189  
+##  Somewhat unfavorable: 235   Somewhat unfavorable: 503  
+##  Very unfavorable    :  54   Very unfavorable    : 550  
+##  Refused             :   8   Refused             :  29  
+##  NA&#39;s                :1309   NA&#39;s                :1309  
+##                                                         
+##               gap21q4_c_w82               gap21q4_d_w82 
+##  Very favorable      : 182   Very favorable      : 115  
+##  Somewhat favorable  : 708   Somewhat favorable  : 694  
+##  Somewhat unfavorable: 270   Somewhat unfavorable: 317  
+##  Very unfavorable    :  78   Very unfavorable    : 115  
+##  Refused             :  49   Refused             :  46  
+##  NA&#39;s                :1309   NA&#39;s                :1309  
+##                                                         
+##               gap21q4_e_w82               gap21q4_f_w82  thermchina_w82
+##  Very favorable      : 164   Very favorable      : 164   0      : 307  
+##  Somewhat favorable  : 596   Somewhat favorable  : 639   50     : 282  
+##  Somewhat unfavorable: 296   Somewhat unfavorable: 306   10     :  98  
+##  Very unfavorable    : 199   Very unfavorable    : 129   20     :  96  
+##  Refused             :  32   Refused             :  49   40     :  84  
+##  NA&#39;s                :1309   NA&#39;s                :1309   (Other): 442  
+##                                                          NA&#39;s   :1287  
+##  thermindia_w82 thermjapan_w82 thermnkorea_w82
+##  50     : 530   50     : 339   0      : 485   
+##  60     :  86   80     : 137   50     : 194   
+##  70     :  78   75     : 119   10     : 151   
+##  75     :  71   90     : 119   20     :  99   
+##  0      :  63   100    : 105   30     :  69   
+##  (Other): 481   (Other): 490   (Other): 311   
+##  NA&#39;s   :1287   NA&#39;s   :1287   NA&#39;s   :1287   
+##                                 gap21q5_a_w82 
+##  Yes, respects personal freedoms       : 148  
+##  No, does not respect personal freedoms:2416  
+##  Refused                               :  32  
+##                                               
+##                                               
+##                                               
+##                                               
+##                                 gap21q5_b_w82 
+##  Yes, respects personal freedoms       :1769  
+##  No, does not respect personal freedoms: 800  
+##  Refused                               :  27  
+##                                               
+##                                               
+##                                               
+##                                               
+##                                                       gap21q6_w82  
+##  Is a good example for other countries to follow            : 555  
+##  Used to be a good example, but has not been in recent years:1840  
+##  Has never been a good example for other countries to follow: 173  
+##  Refused                                                    :  28  
+##                                                                    
+##                                                                    
+##                                                                    
+##        gap21q7_a_w82       gap21q7_b_w82       gap21q7_c_w82 
+##  Very good    :171   Very good    :277   Very good    : 156  
+##  Somewhat good:893   Somewhat good:837   Somewhat good:1446  
+##  Somewhat bad :793   Somewhat bad :681   Somewhat bad : 732  
+##  Very bad     :725   Very bad     :718   Very bad     : 163  
+##  Refused      : 14   Refused      : 83   Refused      :  99  
+##                                                              
+##                                                              
+##        gap21q7_d_w82        gap21q7_e_w82         gap21q8_w82  
+##  Very good    : 224   Very good    : 319   A great deal : 761  
+##  Somewhat good:1211   Somewhat good:1565   A fair amount:1176  
+##  Somewhat bad : 655   Somewhat bad : 477   Not too much : 609  
+##  Very bad     : 448   Very bad     : 103   Not at all   :  50  
+##  Refused      :  58   Refused      : 132   Refused      :   0  
+##                                                                
+##                                                                
+##                                             gap21q9_w82  
+##  More UNITED than before the coronavirus outbreak : 257  
+##  More DIVIDED than before the coronavirus outbreak:2315  
+##  Refused                                          :  24  
+##                                                          
+##                                                          
+##                                                          
+##                                                          
+##                             gap21q10_w82 
+##  More restrictions                :1481  
+##  Fewer restrictions               : 626  
+##  The restrictions were about right: 476  
+##  Refused                          :  13  
+##                                          
+##                                          
+##                                          
+##                                                                                                                   gap21q11_w82 
+##  Recovering from the effects of the coronavirus outbreak in ways that show the strengths of its economic system         : 976  
+##  Failing to recover from the effects of the coronavirus outbreak in ways that show the weaknesses of its economic system:1578  
+##  Refused                                                                                                                :  42  
+##                                                                                                                                
+##                                                                                                                                
+##                                                                                                                                
+##                                                                                                                                
+##        gap21q12_w82                             gap21q13_a_w82
+##  A great deal: 285   It needs to be completely reformed: 411  
+##  Some        :1221   It needs major changes            :1293  
+##  Not too much: 859   It needs minor changes            : 726  
+##  None at all : 221   It doesn’t need to be changed     : 155  
+##  Refused     :  10   Refused                           :  11  
+##                                                               
+##                                                               
+##                             gap21q13_b_w82
+##  It needs to be completely reformed: 741  
+##  It needs major changes            :1224  
+##  It needs minor changes            : 533  
+##  It doesn’t need to be changed     :  86  
+##  Refused                           :  12  
+##                                           
+##                                           
+##                             gap21q13_c_w82               gap21q14_w82 
+##  It needs to be completely reformed:1036   Very confident      : 139  
+##  It needs major changes            :1169   Somewhat confident  : 714  
+##  It needs minor changes            : 331   Not too confident   :1184  
+##  It doesn’t need to be changed     :  52   Not at all confident: 495  
+##  Refused                           :   8   Refused             :   4  
+##                                            NA&#39;s                :  60  
+##                                                                       
+##        gap21q15_a_w82       gap21q15_b_w82       gap21q15_c_w82
+##  The best     :170    The best     :388    The best     : 320  
+##  Above average:612    Above average:935    Above average:1063  
+##  Average      :770    Average      :865    Average      : 793  
+##  Below average:845    Below average:329    Below average: 366  
+##  The worst    :186    The worst    : 65    The worst    :  44  
+##  Refused      : 13    Refused      : 14    Refused      :  10  
+##                                                                
+##        gap21q15_d_w82       gap21q15_e_w82       gap21q15_f_w82
+##  The best     :1180   The best     : 435   The best     : 774  
+##  Above average: 936   Above average:1292   Above average:1022  
+##  Average      : 392   Average      : 706   Average      : 605  
+##  Below average:  56   Below average: 138   Below average: 112  
+##  The worst    :  10   The worst    :  13   The worst    :  59  
+##  Refused      :  22   Refused      :  12   Refused      :  24  
+##                                                                
+##         gap21q17_w82 
+##  A great deal : 357  
+##  A fair amount:1382  
+##  Not too much : 762  
+##  Not at all   :  77  
+##  Refused      :  18  
+##                      
+##                      
+##                                                                                                       gap21q18_w82 
+##  Try to promote human rights in China, even if it harms economic relations with China                       :1887  
+##  Prioritize strengthening economic relations with China, even if it means not addressing human rights issues: 616  
+##  Refused                                                                                                    :  93  
+##                                                                                                                    
+##                                                                                                                    
+##                                                                                                                    
+##                                                                                                                    
+##                  gap21q19_a_w82                 gap21q19_b_w82
+##  A lot of confidence    :859    A lot of confidence    :  29  
+##  Some confidence        :758    Some confidence        : 296  
+##  Not too much confidence:380    Not too much confidence:1043  
+##  No confidence at all   :580    No confidence at all   :1170  
+##  Refused                : 19    Refused                :  58  
+##                                                               
+##                                                               
+##                  gap21q19_c_w82                 gap21q19_d_w82
+##  A lot of confidence    :  38   A lot of confidence    : 592  
+##  Some confidence        : 289   Some confidence        :1149  
+##  Not too much confidence: 884   Not too much confidence: 548  
+##  No confidence at all   :1340   No confidence at all   : 219  
+##  Refused                :  45   Refused                :  88  
+##                                                               
+##                                                               
+##                  gap21q19_e_w82                 gap21q20_w82 
+##  A lot of confidence    : 259   A better place to live:2295  
+##  Some confidence        :1355   A worse place to live : 265  
+##  Not too much confidence: 650   Refused               :  36  
+##  No confidence at all   : 242                                
+##  Refused                :  90                                
+##                                                              
+##                                                              
+##                    gap21q21_a_w82                   gap21q21_b_w82
+##  Very strong conflicts    :1435   Very strong conflicts    : 289  
+##  Strong conflicts         : 947   Strong conflicts         : 850  
+##  Not very strong conflicts: 184   Not very strong conflicts:1206  
+##  There are not conflicts  :  19   There are not conflicts  : 235  
+##  Refused                  :  11   Refused                  :  16  
+##                                                                   
+##                                                                   
+##                    gap21q21_c_w82                   gap21q21_d_w82
+##  Very strong conflicts    : 385   Very strong conflicts    : 653  
+##  Strong conflicts         :1019   Strong conflicts         :1235  
+##  Not very strong conflicts:1096   Not very strong conflicts: 664  
+##  There are not conflicts  :  81   There are not conflicts  :  32  
+##  Refused                  :  15   Refused                  :  12  
+##                                                                   
+##                                                                   
+##                    gap21q21_e_w82                      gap21q22_w82 
+##  Very strong conflicts    : 312   Agree on the basic facts   :1032  
+##  Strong conflicts         : 888   Disagree on the basic facts:1548  
+##  Not very strong conflicts:1283   Refused                    :  16  
+##  There are not conflicts  : 102                                     
+##  Refused                  :  11                                     
+##                                                                     
+##                                                                     
+##                    gap21q23_w82                gap21q24_w82
+##  Very serious problem    :1153   Very concerned      :778  
+##  Somewhat serious problem: 818   Somewhat concerned  :847  
+##  Not too serious problem : 515   Not too concerned   :503  
+##  Not a problem at all    :  97   Not at all concerned:451  
+##  Refused                 :  13   Refused             : 17  
+##                                                            
+##                                                            
+##              gap21q25_w82            gap21q26_a_w82           gap21q26_b_w82
+##  A lot of changes  : 861   Very good job    :216    Very good job    : 107  
+##  Some changes      :1093   Somewhat good job:992    Somewhat good job:1215  
+##  Only a few changes: 353   Somewhat bad job :932    Somewhat bad job : 778  
+##  No changes at all : 276   Very bad job     :404    Very bad job     : 359  
+##  Refused           :  13   Refused          : 52    Refused          : 137  
+##                                                                             
+##                                                                             
+##            gap21q26_c_w82           gap21q26_d_w82
+##  Very good job    :  40   Very good job    : 175  
+##  Somewhat good job: 380   Somewhat good job:1456  
+##  Somewhat bad job : 801   Somewhat bad job : 624  
+##  Very bad job     :1261   Very bad job     : 199  
+##  Refused          : 114   Refused          : 142  
+##                                                   
+##                                                   
+##                               gap21q27_w82               gap21q28_w82 
+##  Benefit America’s economy          :870   Very confident      : 170  
+##  Harm America’s economy             :843   Somewhat confident  :1048  
+##  Have no impact on America’s economy:811   Not too confident   : 909  
+##  Refused                            : 72   Not at all confident: 432  
+##                                            Refused             :  37  
+##                                                                       
+##                                                                       
+##                         gap21q29_w82           gap21q30_w82 
+##  Be the single world leader   : 294   Most active    : 772  
+##  Play a shared leadership role:2064   About as active:1280  
+##  Not play any leadership role : 209   Refused        :  12  
+##  Refused                      :  29   NA&#39;s           : 532  
+##                                                             
+##                                                             
+##                                                             
+##                gap21q31_w82                    gap21q32_w82
+##  Very important      :1418   A lot more positively   :924  
+##  Somewhat important  : 910   A little more positively:935  
+##  Not too important   : 188   A little more negatively:292  
+##  Not at all important:  64   A lot more negatively   :398  
+##  Refused             :  16   Refused                 : 47  
+##                                                            
+##                                                            
+##        gap21q33_a_w82       gap21q33_b_w82       gap21q33_c_w82
+##  Top priority : 855   Top priority :1000   Top priority : 390  
+##  Some priority: 393   Some priority: 260   Some priority: 624  
+##  No priority  :  30   No priority  :  18   No priority  : 260  
+##  Refused      :   9   Refused      :   9   Refused      :  13  
+##  NA&#39;s         :1309   NA&#39;s         :1309   NA&#39;s         :1309  
+##                                                                
+##                                                                
+##        gap21q33_d_w82       gap21q33_e_w82       gap21q33_f_w82
+##  Top priority : 342   Top priority : 564   Top priority : 283  
+##  Some priority: 777   Some priority: 614   Some priority: 742  
+##  No priority  : 150   No priority  :  96   No priority  : 249  
+##  Refused      :  18   Refused      :  13   Refused      :  13  
+##  NA&#39;s         :1309   NA&#39;s         :1309   NA&#39;s         :1309  
+##                                                                
+##                                                                
+##        gap21q33_g_w82       gap21q33_h_w82       gap21q33_i_w82
+##  Top priority : 489   Top priority : 639   Top priority : 619  
+##  Some priority: 583   Some priority: 572   Some priority: 488  
+##  No priority  : 206   No priority  :  62   No priority  : 164  
+##  Refused      :   9   Refused      :  14   Refused      :  16  
+##  NA&#39;s         :1309   NA&#39;s         :1309   NA&#39;s         :1309  
+##                                                                
+##                                                                
+##        gap21q33_j_w82       gap21q33_k_w82       gap21q33_l_w82
+##  Top priority : 627   Top priority : 523   Top priority : 440  
+##  Some priority: 423   Some priority: 706   Some priority: 757  
+##  No priority  : 228   No priority  :  68   No priority  : 102  
+##  Refused      :   9   Refused      :  12   Refused      :  10  
+##  NA&#39;s         :1309   NA&#39;s         :1287   NA&#39;s         :1287  
+##                                                                
+##                                                                
+##        gap21q33_m_w82       gap21q33_n_w82       gap21q33_o_w82
+##  Top priority : 985   Top priority : 546   Top priority : 774  
+##  Some priority: 285   Some priority: 634   Some priority: 489  
+##  No priority  :  29   No priority  : 111   No priority  :  36  
+##  Refused      :  10   Refused      :  18   Refused      :  10  
+##  NA&#39;s         :1287   NA&#39;s         :1287   NA&#39;s         :1287  
+##                                                                
+##                                                                
+##        gap21q33_p_w82       gap21q33_q_w82       gap21q33_r_w82
+##  Top priority : 944   Top priority : 565   Top priority : 355  
+##  Some priority: 330   Some priority: 643   Some priority: 756  
+##  No priority  :  23   No priority  :  85   No priority  : 186  
+##  Refused      :  12   Refused      :  16   Refused      :  12  
+##  NA&#39;s         :1287   NA&#39;s         :1287   NA&#39;s         :1287  
+##                                                                
+##                                                                
+##        gap21q33_s_w82       gap21q33_t_w82              gap21q34_a_w82
+##  Top priority : 301   Top priority : 575   Very confident      :717   
+##  Some priority: 471   Some priority: 616   Somewhat confident  :864   
+##  No priority  : 524   No priority  : 101   Not too confident   :398   
+##  Refused      :  13   Refused      :  17   Not at all confident:602   
+##  NA&#39;s         :1287   NA&#39;s         :1287   Refused             : 15   
+##                                                                       
+##                                                                       
+##               gap21q34_b_w82              gap21q34_c_w82
+##  Very confident      :701    Very confident      :828   
+##  Somewhat confident  :903    Somewhat confident  :776   
+##  Not too confident   :409    Not too confident   :392   
+##  Not at all confident:558    Not at all confident:582   
+##  Refused             : 25    Refused             : 18   
+##                                                         
+##                                                         
+##               gap21q34_d_w82              gap21q34_e_w82
+##  Very confident      :711    Very confident      :1081  
+##  Somewhat confident  :909    Somewhat confident  : 710  
+##  Not too confident   :432    Not too confident   : 341  
+##  Not at all confident:519    Not at all confident: 449  
+##  Refused             : 25    Refused             :  15  
+##                                                         
+##                                                         
+##               gap21q34_f_w82
+##  Very confident      :503   
+##  Somewhat confident  :916   
+##  Not too confident   :467   
+##  Not at all confident:689   
+##  Refused             : 21   
+##                             
+##                             
+##                                                                                 gap21q35_w82 
+##  MANY of the problems facing our country can be solved by working with other countries:1425  
+##  FEW of the problems facing our country can be solved by working with other countries :1140  
+##  Refused                                                                              :  31  
+##                                                                                              
+##                                                                                              
+##                                                                                              
+##                                                                                              
+##                                                                                                                    gap21q36_w82 
+##  In foreign policy, the U.S. should take into account the interests of its allies even if it means making compromises wit:1738  
+##  In foreign policy, the U.S. should follow its own national interests even when its allies strongly disagree             : 815  
+##  Refused                                                                                                                 :  43  
+##                                                                                                                                 
+##                                                                                                                                 
+##                                                                                                                                 
+##                                                                                                                                 
+##                                                                                      gap21q37_w82 
+##  It’s best for the future of our country to be active in world affairs                     :1376  
+##  We should pay less attention to problems overseas and concentrate on problems here at home:1190  
+##  Refused                                                                                   :  30  
+##                                                                                                   
+##                                                                                                   
+##                                                                                                   
+##                                                                                                   
+##        gap21q38_a_w82       gap21q38_b_w82       gap21q38_c_w82
+##  A great deal : 858   A great deal :881    A great deal :934   
+##  A fair amount:1050   A fair amount:918    A fair amount:802   
+##  Not too much : 473   Not too much :492    Not too much :461   
+##  Not at all   : 168   Not at all   :273    Not at all   :372   
+##  Refused      :  47   Refused      : 32    Refused      : 27   
+##                                                                
+##                                                                
+##      gap21q40_w82         gap21q41_w82 
+##  Partner   : 215   Very good    :  26  
+##  Competitor:1423   Somewhat good: 760  
+##  Enemy     : 931   Somewhat bad :1395  
+##  Refused   :  27   Very bad     : 375  
+##                    Refused      :  40  
+##                                        
+##                                        
+##                                                        gap21q42_w82 
+##  Building a strong relationship with China on economic issues:1104  
+##  Getting tougher with China on economic issues               :1425  
+##  Refused                                                     :  67  
+##                                                                     
+##                                                                     
+##                                                                     
+##                                                                     
+##                       gap21q43_a_w82                      gap21q43_b_w82
+##  Very serious problem        :1396   Very serious problem        :1147  
+##  Somewhat serious problem    : 824   Somewhat serious problem    :1080  
+##  Not too serious of a problem: 296   Not too serious of a problem: 259  
+##  Not a problem at all        :  48   Not a problem at all        :  54  
+##  Refused                     :  32   Refused                     :  56  
+##                                                                         
+##                                                                         
+##                       gap21q43_c_w82                      gap21q43_d_w82
+##  Very serious problem        :1372   Very serious problem        : 781  
+##  Somewhat serious problem    : 870   Somewhat serious problem    :1195  
+##  Not too serious of a problem: 256   Not too serious of a problem: 469  
+##  Not a problem at all        :  53   Not a problem at all        :  67  
+##  Refused                     :  45   Refused                     :  84  
+##                                                                         
+##                                                                         
+##                       gap21q43_e_w82                      gap21q43_f_w82
+##  Very serious problem        :1797   Very serious problem        :1430  
+##  Somewhat serious problem    : 620   Somewhat serious problem    : 879  
+##  Not too serious of a problem: 113   Not too serious of a problem: 223  
+##  Not a problem at all        :  28   Not a problem at all        :  26  
+##  Refused                     :  38   Refused                     :  38  
+##                                                                         
+##                                                                         
+##                       gap21q43_g_w82                      gap21q43_h_w82
+##  Very serious problem        :1264   Very serious problem        : 843  
+##  Somewhat serious problem    : 938   Somewhat serious problem    :1194  
+##  Not too serious of a problem: 306   Not too serious of a problem: 417  
+##  Not a problem at all        :  53   Not a problem at all        :  62  
+##  Refused                     :  35   Refused                     :  80  
+##                                                                         
+##                                                                         
+##                     gap21q44_w82                     gap21q45_w82 
+##  Good for the U.S.        : 805   Good for you personally  : 271  
+##  Bad for the U.S.         :1184   Bad for you personally   : 790  
+##  No real effect either way: 546   No real effect either way:1477  
+##  Refused                  :  61   Refused                  :  58  
+##                                                                   
+##                                                                   
+##                                                                   
+##   gap21q46_w82                                      gap21q47_w82
+##  Good   :2106   Strongly support limiting Chinese students:562  
+##  Bad    : 457   Somewhat support limiting Chinese students:902  
+##  Refused:  33   Somewhat oppose limiting Chinese students :658  
+##                 Strongly oppose limiting Chinese students :434  
+##                 Refused                                   : 40  
+##                                                                 
+##                                                                 
+##              f_metro         f_cregion               f_cdivision     f_agecat  
+##  Metropolitan    :2274   Northeast:447   South Atlantic    :576   18-29  :301  
+##  Non-metropolitan: 322   Midwest  :580   East North Central:389   30-49  :849  
+##                          South    :980   Pacific           :371   50-64  :756  
+##                          West     :589   Middle Atlantic   :322   65+    :680  
+##                                          West South Central:264   Refused: 10  
+##                                          Mountain          :218                
+##                                          (Other)           :456                
+##               f_gender                    f_educcat   
+##  A man            :1149   College graduate+    :1149  
+##  A woman          :1417   Some College         : 628  
+##  In some other way:  24   H.S. graduate or less: 814  
+##  Refused          :   6   Refused              :   5  
+##                                                       
+##                                                       
+##                                                       
+##                            f_educcat2      f_hisp    
+##  Less than high school          :135   Yes    : 395  
+##  High school graduate           :679   No     :2188  
+##  Some college, no degree        :442   Refused:  13  
+##  Associate&#39;s degree             :186                 
+##  College graduate/some post grad:629                 
+##  Postgraduate                   :520                 
+##  Refused                        :  5                 
+##               f_hisp_origin 
+##  Mexican             : 159  
+##  Other South American:  56  
+##  Puerto Rican        :  39  
+##  Other country       :  38  
+##  Cuban               :  28  
+##  (Other)             :  75  
+##  NA&#39;s                :2201  
+##                                                 f_yearsinus  
+##  Born in US (not including unincorporated territories):2198  
+##  0-10 years                                           :  90  
+##  11-20 years                                          :  78  
+##  21+ years                                            : 214  
+##  DK/Ref                                               :  16  
+##                                                              
+##                                                              
+##                      f_racecmb                f_racethnmod    f_citizen   
+##  White                    :1963   White non-Hispanic:1717   Yes    :2469  
+##  Black or African-American: 255   Black non-Hispanic: 248   No     : 121  
+##  Asian or Asian-American  : 129   Hispanic          : 395   Refused:   6  
+##  Mixed Race               : 108   Other             :  87                 
+##  Or some other race       : 100   Asian non-Hispanic: 125                 
+##  Refused                  :  41   Refused           :  24                 
+##                                                                           
+##               f_birthplace2                  f_marital   
+##  U.S.                :2198   Married              :1365  
+##  Puerto Rico         :  22   Living with a partner: 229  
+##  Other U.S. territory:   7   Divorced             : 313  
+##  Cuba                :  19   Separated            :  48  
+##  Mexico              :  45   Widowed              : 142  
+##  Another country     : 293   Never been married   : 489  
+##  Refused             :  12   Refused              :  10  
+##                   f_relig                                             f_born   
+##  Protestant           :1060   Yes, born-again or evangelical Christian   :710  
+##  Roman Catholic       : 505   No, not born-again or evangelical Christian:894  
+##  Nothing in particular: 474   Refused                                    : 30  
+##  Agnostic             : 173   NA&#39;s                                       :962  
+##  Atheist              : 150                                                    
+##  Other                :  57                                                    
+##  (Other)              : 177                                                    
+##        f_religcat1                    f_attend          f_party_final
+##  Protestant  :1060   More than once a week:215   Republican    :755  
+##  Catholic    : 505   Once a week          :491   Democrat      :912  
+##  Unaffiliated: 797   Once or twice a month:201   Independent   :662  
+##  Other       : 224   A few times a year   :386   Something else:247  
+##  Refused     :  10   Seldom               :613   Refused       : 20  
+##                      Never                :682                       
+##                      Refused              :  8                       
+##              f_partyln_final           f_partysum_final
+##  The Republican Party: 351   Rep/Lean Rep      :1106   
+##  The Democratic Party: 498   Dem/Lean Dem      :1410   
+##  Refused             :  80   DK/Refused/No lean:  80   
+##  NA&#39;s                :1667                             
+##                                                        
+##                                                        
+##                                                        
+##                                    f_partysumideo
+##  Conservative Rep/Lean                    :696   
+##  Moderate/Liberal Rep/Lean                :393   
+##  Moderate/Conservative Dem/Lean           :689   
+##  Liberal Dem/Lean                         :709   
+##  Refused either F_IDEO or F_PARTYSUM_FINAL:109   
+##                                                  
+##                                                  
+##                         f_inc_sdt1 
+##  $100,000 or more            :565  
+##  Less than $30,000           :553  
+##  $30,000 to less than $40,000:297  
+##  $50,000 to less than $60,000:229  
+##  $40,000 to less than $50,000:219  
+##  $70,000 to less than $80,000:189  
+##  (Other)                     :544  
+##                                                                                 f_reg     
+##  You are ABSOLUTELY CERTAIN that you are registered to vote at your current address:2107  
+##  You are PROBABLY registered, but there is a chance your registration has lapsed   : 152  
+##  You are NOT registered to vote at your current address                            : 188  
+##  Refused                                                                           :  22  
+##  NA&#39;s                                                                              : 127  
+##                                                                                           
+##                                                                                           
+##                f_ideo                   f_intfreq       f_volsum   
+##  Very conservative:215   Almost constantly   :1116   Yes    : 952  
+##  Conservative     :587   Several times a day :1128   No     :1635  
+##  Moderate         :993   About once a day    : 131   Refused:   9  
+##  Liberal          :519   Several times a week:  67                 
+##  Very liberal     :225   Less often          :  40                 
+##  Refused          : 57   Refused             :   2                 
+##                          NA&#39;s                : 112                 
+##         f_inc_tier2     weight_w82      weight_w73_w82  
+##  Lower income : 678   Min.   :0.02938   Min.   :0.0560  
+##  Middle income:1246   1st Qu.:0.42626   1st Qu.:0.4334  
+##  Upper income : 577   Median :0.71287   Median :0.6706  
+##  Refused      :  95   Mean   :1.00000   Mean   :1.0000  
+##                       3rd Qu.:1.17408   3rd Qu.:1.1338  
+##                       Max.   :5.60802   Max.   :6.1817  
+##                                         NA&#39;s   :742</code></pre>
+</div>
+<div class="section level1">
+<h1>Overview of the Data</h1>
+<p>The analysis is based on survey data from the Pew Research Center,
+focusing on responses to question Q46.</p>
+<p>Q 46. Do you think it’s good or bad for U.S. colleges and
+universities to accept international students?</p>
+<p>It has 2 options ‘good’ and ‘bad’ however unanswered question can be
+considered as separate category ‘rejected’</p>
+<p>Q 20. Overall, do you think having people of many different
+backgrounds, such as different ethnic groups, religions and races, makes
+the U.S.</p>
+<p>It has 2 options ‘a better place to live’ and ’ a worse place to
+live’ and unanwered question can be considered as ‘rejected’</p>
+<p>Q 22. When it comes to important issues facing the U.S., people may
+disagree over policies, but do you think most people</p>
+<p>It has 2 options ‘Agree on the basic facts’ and ’ Disagree on the
+basic facts’ and unanwered question can be considered as ‘rejected’</p>
+<p>Q 23. In the U.S., do you think discrimination against people based
+on their race or ethnicity is a.</p>
+<p>It has 4 options ‘Very serious problem’, ‘Somewhat serious problem’,
+‘Not too serious problem’, and ‘Not a problem at all’</p>
+<p>Initially Q 46 is analyzed w.r.t to the personnel data particularly
+age, education and income.</p>
+</div>
+<div class="section level1">
+<h1>1. Use the table()function to see how factor variables are
+distributed.</h1>
+<pre class="r"><code>table(data$f_agecat)</code></pre>
+<pre><code>## 
+##   18-29   30-49   50-64     65+ Refused 
+##     301     849     756     680      10</code></pre>
+<p>Clearly there are 5 categories in age namely ‘18-29’, ‘30-49’,
+‘50-64’, 65+ and refused</p>
+<pre class="r"><code>table(data$f_educcat)</code></pre>
+<pre><code>## 
+##     College graduate+          Some College H.S. graduate or less 
+##                  1149                   628                   814 
+##               Refused 
+##                     5</code></pre>
+<p>Clearly there are 4 categories in education namely ‘college
+graduate+’, ‘Some college H.S.’, ‘graduate or less’, and refused</p>
+<pre class="r"><code>table(data$f_inc_tier2)</code></pre>
+<pre><code>## 
+##  Lower income Middle income  Upper income       Refused 
+##           678          1246           577            95</code></pre>
+<p>Income has 4 categories ‘lower income’, ‘middle income’,‘upper
+income’and ’refused’</p>
+</div>
+<div class="section level1">
+<h1>Including the weight variable in the responses</h1>
+<p>The next step in analyzing the survey data is to use the svydesign ()
+function from R’s “survey” package to create a survey design object. We
+need to state the survey design to properly use survey weights and other
+design components for estimation.This will enable us to generalize to
+the overall U.S. population.</p>
+<pre class="r"><code>w82_design = svydesign(
+  ids = ~0, #formula indicating there are no clusters  
+  data = data,      #this is the dataset 
+  weights = ~weight_w82) #this is the &#39;weight&#39; variable</code></pre>
+<div class="section level2">
+<h2>Visualizations</h2>
+</div>
+</div>
+<div class="section level1">
+<h1>1. Bar Plot of age distribution by Q46</h1>
+<pre class="r"><code>ggplot(data) +
+  geom_bar(aes(x = f_agecat, fill = factor(gap21q46_w82)), position = &quot;stack&quot;) +
+  labs(title = &quot;Age Distribution by Q46 Responses&quot;, x = &quot;Age Category&quot;, y = &quot;Count&quot;)</code></pre>
+<p><img src="javascript://" width="672"/>
+# Age Distribution Analysis (Q46) 18-29 age group: Shows strongest
+support for international students with ~90% viewing it as “Good” 30-49
+age group: High support (“Good”) with largest response volume 50-64 age
+and 65+ group: More divided views but still positive majority (“Good”)
+Refusal rate: Minimal across all age groups</p>
+</div>
+<div class="section level1">
+<h1>2. Bar Plot of education distribution by Q46</h1>
+<pre class="r"><code>ggplot(data) +
+  geom_bar(aes(x = f_educcat, fill = factor(gap21q46_w82)), position = &quot;stack&quot;) +
+  labs(title = &quot;Education Distribution by Q46 Responses&quot;, x = &quot;Education category&quot;, y = &quot;Count&quot;)</code></pre>
+<p><img src="javascript://" width="672"/>
+# Effect on Education Level (Q46) College graduates: Highest support for
+Good, likely due to direct exposure to international students Some
+College: Strong support for Good High School or less: More divided views
+for Good and Bad, but more inclined towards good</p>
+<p>Clear correlation: Higher education levels correspond to more
+positive views of international students</p>
+<p>#3. Bar plot of Income Distribution by Q46</p>
+<pre class="r"><code>ggplot(data) +
+  geom_bar(aes(x = f_inc_tier2, fill = factor(gap21q46_w82)), position = &quot;stack&quot;) +
+  labs(title = &quot;Income Distribution by Q46 Responses&quot;, x = &quot;Income category&quot;, y = &quot;Count&quot;)</code></pre>
+<p><img src="javascript://" width="672"/>
+# Effect of income on Q46 Lower income: Slightly more divided but still
+positive majority (“Good”) Middle income: Largest response group,
+strongly positive ( “Good”) Upper income: Most favorable views
+(“Good”)</p>
+<p>Pattern: Higher income correlates with more positive views toward
+international students</p>
+<div class="section level2">
+<h2>Objective 2</h2>
+<p>Correlation analysis of Q20, Q22 and Q 23</p>
+<pre class="r"><code># Ensure numeric conversion
+q_correlation &lt;- cor(data %&gt;%
+                     select(gap21q20_w82, gap21q22_w82, gap21q23_w82) %&gt;%
+                     mutate(across(everything(), as.numeric)), 
+                     use = &quot;pairwise.complete.obs&quot;)
+
+# Generate a heatmap-style correlation plot
+corrplot(q_correlation, method = &quot;color&quot;, col = colorRampPalette(c(&quot;blue&quot;, &quot;white&quot;, &quot;red&quot;))(200),  
+         tl.cex = 1.2, # Text label size
+         number.cex = 1.2, # Number size
+         addCoef.col = &quot;black&quot;) # Add correlation values in black</code></pre>
+<p><img src="javascript://" width="672"/>
+# Correlation Analysis (Q20, Q22, Q23) 1. Q20-Q22 (0.06) Views on
+diversity making US better vs.&#160;agreement on basic facts Nearly zero
+correlation - these attitudes are independent</p>
+<ol start="2" style="list-style-type: decimal;">
+<li><p>Q20-Q23 (0.24) Views on diversity vs.&#160;perception of racial
+discrimination Weak positive correlation - slight tendency for those
+favoring diversity to see discrimination as more serious</p></li>
+<li><p>Q22-Q23 (-0.01) Agreement on basic facts vs.&#160;views on
+discrimination No correlation - completely independent views The
+correlation coefficients show these three social attitudes have minimal
+relationships with each other, suggesting they measure distinct aspects
+of public opinion.</p></li>
+</ol>
+</div>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

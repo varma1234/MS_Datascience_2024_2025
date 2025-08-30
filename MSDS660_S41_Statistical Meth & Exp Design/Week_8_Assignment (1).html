@@ -1,0 +1,840 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+
+
+<h1 class="title toc-ignore">Week_8_HW</h1>
+<h4 class="date">2025-03-04</h4>
+
+</div>
+
+
+<div class="section level1">
+<h1>Setting the working directory</h1>
+<pre class="r"><code>setwd(&quot;F:/Balaram/Statcourse&quot;)</code></pre>
+</div>
+<div class="section level1">
+<h1>Homework Week 8</h1>
+<div class="section level3">
+<h3>1. Flu shot problem</h3>
+<p>Is there a significant difference in median flu antibodies detected
+with the new flu vaccine?</p>
+<ul>
+<li>Consider the following questions and apply the appropriate
+statistical test:
+<ul>
+<li>Are they from a normal distribution?</li>
+<li>Are the data paired or unpaired?</li>
+<li>Will you use a one sided or two sided test?</li>
+<li>Which test will you use?</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Load the flu_shot.csv data:
+flu &lt;- fread(&#39;new_flu_shot.csv&#39;)
+
+# View the structure of the data
+str(flu)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   15 obs. of  2 variables:
+##  $ old.vaccine: int  7500 8000 2000 550 1250 1000 2250 6800 3400 6300 ...
+##  $ new.vaccine: chr  &quot;400&quot; &quot;250&quot; &quot;800&quot; &quot;1400&quot; ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code># Convert the &#39;undetectable to a 0 and convert column to numeric
+flu$new.vaccine[flu$new.vaccine == &quot;undetectable&quot;] &lt;- 0
+flu$new.vaccine &lt;- as.numeric(flu$new.vaccine)
+
+# View structure again to confirm:
+str(flu)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   15 obs. of  2 variables:
+##  $ old.vaccine: int  7500 8000 2000 550 1250 1000 2250 6800 3400 6300 ...
+##  $ new.vaccine: num  400 250 800 1400 8000 7400 1020 6000 920 1420 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code># Box plot the data
+boxplot(flu$old.vaccine, flu$new.vaccine)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Plot the density distribution
+plot(density(flu$old.vaccine), col = &#39;blue&#39;)
+lines(density(flu$new.vaccine), col = &#39;red&#39;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Use the Shapiro-Wilks test to see if they are from a normal distribution
+shapiro.test(flu$old.vaccine)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  flu$old.vaccine
+## W = 0.81865, p-value = 0.006443</code></pre>
+<pre class="r"><code>shapiro.test(flu$new.vaccine)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  flu$new.vaccine
+## W = 0.87824, p-value = 0.04466</code></pre>
+<pre class="r"><code># Apply the appropriate statistical test to answer the research question.</code></pre>
+</div>
+</div>
+<div class="section level1">
+<h1>Explanation and Interpretation of Results</h1>
+<ol style="list-style-type: decimal;">
+<li><strong>Shapiro-Wilk Normality Test</strong> The Shapiro-Wilk test
+checks whether the data follows a normal distribution. Here are the
+results for flu$old.vaccine:</li>
+</ol>
+<p>W = 0.81865, p-value = 0.006443</p>
+<p>H0: The null hypothesis (H₀) of the Shapiro-Wilk test is that the
+data comes from a normal distribution.</p>
+<ul>
+<li><p>Since the p-value is less than 0.05, we reject the null
+hypothesis. This indicates that the old.vaccine data does not follow a
+normal distribution.</p></li>
+<li><p>For flu$new.vaccine, we would also run a Shapiro-Wilk test to
+confirm its distribution.</p></li>
+</ul>
+<p><strong>Box Plot and Density Plot Observations</strong></p>
+<ol style="list-style-type: decimal;">
+<li><p>The box plot shows the spread of flu antibody levels for both
+old.vaccine and new.vaccine. It appears that the median antibody levels
+for the new vaccine are lower than those for the old vaccine.</p></li>
+<li><p>The density plot shows that the distributions of antibody levels
+for both vaccines are not symmetric, further supporting
+non-normality.</p></li>
+</ol>
+<p><strong>Conclusion from Normality Test</strong> Since at least one
+dataset (old.vaccine) is not normally distributed, we need to use a
+non-parametric statistical test to compare the two groups.</p>
+<p><strong>Question: Is there a significant difference in median flu
+antibodies detected with the new flu vaccine? Determine if Paired or
+Unpaired Data</strong></p>
+<p><strong>1. Determine Paired or Unpaired Data</strong> The data
+consists of flu antibody levels measured from the same individuals for
+both vaccines (old.vaccine and new.vaccine). Therefore, the data is
+paired.</p>
+<p><strong>2. Choose Test Type</strong> We are interested in determining
+if there is a significant difference in median flu antibodies between
+the old and new vaccines. A one-sided test is appropriate if we expect
+one vaccine to produce higher antibody levels than the other. Otherwise,
+we use a two-sided test to check for any difference in medians.</p>
+<p><strong>3. Apply Statistical Test</strong> Since the data is paired
+and not normally distributed, we will use the Wilcoxon Signed-Rank Test,
+which is a non-parametric alternative to the paired t-test.</p>
+<pre class="r"><code># Apply Wilcoxon Signed-Rank Test (Paired Data)
+wilcox_test &lt;- wilcox.test(x = flu$old.vaccine, y = flu$new.vaccine,
+                           paired = TRUE, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>## Warning in wilcox.test.default(x = flu$old.vaccine, y = flu$new.vaccine, :
+## cannot compute exact p-value with ties</code></pre>
+<pre class="r"><code># Print Wilcoxon Signed-Rank Test results
+print(wilcox_test)</code></pre>
+<pre><code>## 
+##  Wilcoxon signed rank test with continuity correction
+## 
+## data:  flu$old.vaccine and flu$new.vaccine
+## V = 68.5, p-value = 0.6495
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
+</div>
+<div class="section level1">
+<h1>Wilcoxon Signed-Rank Test:</h1>
+<ol style="list-style-type: decimal;">
+<li><p>The null hypothesis (H₀) is that there is no difference in median
+antibody levels between the old and new vaccines.</p></li>
+<li><p>If p-value &lt; 0.05, we reject H₀ and conclude that there is a
+significant difference in median antibody levels between the two
+vaccines.</p></li>
+<li><p>If using a one-sided test (e.g., alternative = “greater”), it
+tests whether median antibody levels for the old vaccine are
+significantly greater than those for the new vaccine.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1>Wilcoxon Signed-Rank Test Output</h1>
+<ol style="list-style-type: decimal;">
+<li><p>Warning: cannot compute exact p-value with ties: This warning
+occurs because there are tied values in the data (e.g., identical values
+in old.vaccine and new.vaccine). The Wilcoxon test uses ranks, and ties
+make it impossible to compute exact ranks. Instead, the test uses an
+approximation.</p></li>
+<li><p>V = 68.5: This is the test statistic from the Wilcoxon
+signed-rank test.</p></li>
+<li><p>p-value = 0.6495: The p-value is greater than 0.05, so we fail to
+reject the null hypothesis.</p></li>
+<li><p>Alternative hypothesis: true location shift is not equal to 0:
+This means the test was two-sided, checking for any difference (increase
+or decrease) in median antibody levels between the old and new
+vaccines.</p></li>
+</ol>
+</div>
+<div class="section level1">
+<h1>Conclusion</h1>
+<p>The p-value of 0.6495 indicates that there is no statistically
+significant difference in median flu antibody levels between the old and
+new vaccines based on this dataset.</p>
+<div class="section level2">
+<h2>Japanese Car Problem</h2>
+<p>Is there a difference in median mpg between Japanese and US cars?</p>
+<ul>
+<li>Consider the following questions and apply the appropriate
+statistical test:
+<ul>
+<li>Are they from a normal distribution?</li>
+<li>Are the data paired or unpaired?</li>
+<li>Will you use a one sided or two sided test?</li>
+<li>Which test will you use?</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Load the mpg.csv data:
+mpg &lt;- fread(&#39;mpg.csv&#39;)
+
+# we have the missing value and hence remove rows with missing values
+mpg &lt;- mpg[mpg$US_Car_MPG != -999 &amp; mpg$Japanese_Car_MPG != -999, ]
+
+# View the structure
+str(mpg)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   79 obs. of  2 variables:
+##  $ US_Car_MPG      : int  18 15 18 16 17 15 14 14 14 15 ...
+##  $ Japanese_Car_MPG: int  24 27 27 25 31 35 24 19 28 23 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code># View a summary of the data
+summary(mpg)</code></pre>
+<pre><code>##    US_Car_MPG    Japanese_Car_MPG
+##  Min.   : 9.00   Min.   :18.00   
+##  1st Qu.:13.00   1st Qu.:25.50   
+##  Median :15.00   Median :32.00   
+##  Mean   :16.03   Mean   :30.48   
+##  3rd Qu.:18.00   3rd Qu.:34.00   
+##  Max.   :28.00   Max.   :47.00</code></pre>
+<pre class="r"><code># View box plot of the data
+boxplot(mpg$US_Car_MPG, mpg$Japanese_Car_MPG,
+        names = c(&quot;US Cars&quot;, &quot;Japanese Cars&quot;),
+        main = &quot;Comparison of MPG&quot;,
+        col = c(&quot;lightblue&quot;, &quot;lightgreen&quot;),
+        ylab = &quot;MPG&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Plot the density distribution.
+plot(density(mpg$US_Car_MPG), col = &#39;blue&#39;, lwd = 2,
+     main = &quot;Density Plot of MPG&quot;,
+     xlab = &quot;MPG&quot;)
+lines(density(mpg$Japanese_Car_MPG), col = &#39;green&#39;, lwd = 2)
+legend(&quot;topright&quot;, legend = c(&quot;US Cars&quot;, &quot;Japanese Cars&quot;),
+       col = c(&quot;blue&quot;, &quot;green&quot;), lwd = 2)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Create a US data set from the V1 data and a Japanese data set from the V2 data
+us_cars &lt;- mpg$US_Car_MPG
+japanese_cars &lt;- mpg$Japanese_Car_MPG
+
+# Remove outliers
+# Function to calculate Z-scores
+calculate_z_scores &lt;- function(data) {
+    mean_val &lt;- mean(data, na.rm = TRUE)
+    sd_val &lt;- sd(data, na.rm = TRUE)
+    z_scores &lt;- (data - mean_val) / sd_val
+    return(z_scores)
+}
+
+# Calculate Z-scores for US and Japanese cars
+us_z_scores &lt;- calculate_z_scores(us_cars)
+jp_z_scores &lt;- calculate_z_scores(japanese_cars)
+
+# Remove outliers based on Z-scores
+us_cars_filtered &lt;- us_cars[abs(us_z_scores) &lt; 2]
+jp_cars_filtered &lt;- japanese_cars[abs(jp_z_scores) &lt; 2]
+
+# Use the Shapiro-Wilks test to see if they are from a normal distribution
+# Perform Shapiro-Wilk test for normality
+shapiro_us &lt;- shapiro.test(us_cars)
+shapiro_jp &lt;- shapiro.test(japanese_cars)
+
+# Print results
+print(shapiro_us)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  us_cars
+## W = 0.90891, p-value = 3.293e-05</code></pre>
+<pre class="r"><code>print(shapiro_jp)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  japanese_cars
+## W = 0.97676, p-value = 0.1586</code></pre>
+<pre class="r"><code># Apply the appropriate statistical test to answer the research question.</code></pre>
+<p>#Interpretation of Results</p>
+<p><strong>1.Shapiro-Wilk Normality Test Results</strong></p>
+<ul>
+<li><p>US Cars (W = 0.90891, p-value = 3.293e-05): The p-value is much
+smaller than 0.05, indicating that the mpg data for US cars does not
+follow a normal distribution.</p></li>
+<li><p>Japanese Cars (W = 0.97676, p-value = 0.1586): The p-value is
+greater than 0.05, indicating that the mpg data for Japanese cars
+follows a normal distribution.</p></li>
+</ul>
+<p><strong>2. Box Plot and Density Plot Observations</strong></p>
+<p>From the box plot:Japanese cars generally have higher mpg values
+compared to US cars.</p>
+<ul>
+<li>There are some outliers in both groups.</li>
+</ul>
+<p>From the density plot: The distributions of mpg for US and Japanese
+cars differ significantly.</p>
+<ul>
+<li>US cars have a left-skewed distribution with lower mpg values, while
+Japanese cars have a more symmetric distribution with higher mpg
+values.</li>
+</ul>
+</div>
+</div>
+<div class="section level1">
+<h1>Is there a difference in median mpg between Japanese and US
+cars?</h1>
+<ol style="list-style-type: decimal;">
+<li><p>check for Paired or Unpaired data: The data are unpaired because
+the mpg values for US and Japanese cars are from different groups of
+vehicles.</p></li>
+<li><p>Selection of suitable test: Since the data for US cars is not
+normally distributed, we will use a non-parametric test.</p></li>
+</ol>
+<p>The appropriate test for comparing two unpaired groups is the
+<strong>Mann-Whitney U-test (also known as the Wilcoxon rank-sum
+test)</strong>.</p>
+</div>
+<div class="section level1">
+<h1>Mann-whitney U-test</h1>
+<pre class="r"><code># Apply Mann-Whitney U-test (Unpaired Data)
+mw_test &lt;- wilcox.test(x = us_cars, y = japanese_cars, alternative = &quot;two.sided&quot;, exact = FALSE)
+
+# Print results
+print(mw_test)</code></pre>
+<pre><code>## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  us_cars and japanese_cars
+## W = 186.5, p-value &lt; 2.2e-16
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
+<p><strong>Mann-Whitney U-Test Results</strong> Null Hypothesis (H₀):
+There is no difference in median mpg between US and Japanese cars.</p>
+<p>Alternative Hypothesis (Hₐ): There is a difference in median mpg
+between US and Japanese cars.</p>
+<p>If the p-value is less than 0.05, we reject H₀ and conclude that
+there is a significant difference in median mpg between the two
+groups.</p>
+<p><strong>Mann-Whitney U-Test Test Results</strong></p>
+<ul>
+<li><p>Test Statistic (W = 186.5): This is the rank sum test
+statistic.</p></li>
+<li><p>p-value &lt; 2.2e-16: The p-value is extremely small, much less
+than the significance level of 0.05.</p></li>
+<li><p>Alternative Hypothesis: The true location shift (difference in
+medians) is not equal to zero.</p></li>
+</ul>
+<p><strong>Explanation</strong> The Shapiro-Wilk test results indicate
+that the data for US cars is not normally distributed, while Japanese
+cars follow a normal distribution. Hence, using a non-parametric test
+like the Wilcoxon Rank Sum Test (Mann-Whitney U-test) is
+appropriate.</p>
+<ul>
+<li>Mann-Whitney U-Test Test confirms that there is a statistically
+significant difference in median mpg between US and Japanese cars (p&lt;
+0.05). The extremely small p-value suggests that this difference is
+highly significant and unlikely to be due to random chance.</li>
+</ul>
+<p><strong>Conclusion</strong></p>
+<p>Based on the statistical and visual analyses:</p>
+<ol style="list-style-type: decimal;">
+<li><p>Median Comparison: Japanese cars have significantly higher median
+mpg compared to US cars.</p></li>
+<li><p>Distribution Differences: The distributions of mpg values for US
+and Japanese cars are distinct, as shown by density plots and box
+plots.</p></li>
+<li><p>Statistical Significance: The Mann-Whitney U-Test Test confirms
+that the difference in median mpg between US and Japanese cars is highly
+significant (p&lt;0.05).</p></li>
+</ol>
+<p>Thus, we conclude that Japanese cars are more fuel-efficient on
+average than US cars based on their higher median miles per gallon
+(mpg).</p>
+<hr/>
+<div class="section level2">
+<h2>Vocab training problem</h2>
+<p>Does vocab training significantly improve median test scores?</p>
+<ul>
+<li>Consider the following questions and apply the appropriate
+statistical test:
+<ul>
+<li>Are they from a normal distribution?</li>
+<li>Are the data paired or unpaired?</li>
+<li>Will you use a one sided or two sided test?</li>
+<li>Which test will you use?</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Load the vocab.csv data:
+vocab &lt;- fread(&#39;vocab.csv&#39;)
+
+# View the structure of the data
+str(vocab)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   14 obs. of  2 variables:
+##  $ before.training: int  84 55 43 64 72 65 72 52 49 80 ...
+##  $ after.training : int  86 52 50 72 70 67 80 50 62 81 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code># View box plot of the data
+boxplot(vocab$before.training, vocab$after.training,
+        names = c(&quot;Pre-Training&quot;, &quot;Post-Training&quot;),
+        main = &quot;Comparison of Vocabulary Test Scores&quot;,
+        col = c(&quot;lightblue&quot;, &quot;lightgreen&quot;),
+        ylab = &quot;Test Scores&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Plot the density distribution.
+plot(density(vocab$before.training), col = &#39;blue&#39;, lwd = 2,
+     main = &quot;Density Plot of Vocabulary Test Scores&quot;,
+     xlab = &quot;Test Scores&quot;)
+lines(density(vocab$after.training), col = &#39;green&#39;, lwd = 2)
+legend(&quot;topright&quot;, legend = c(&quot;Pre-Training&quot;, &quot;Post-Training&quot;),
+       col = c(&quot;blue&quot;, &quot;green&quot;), lwd = 2)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Use the Shapiro-Wilks  test to see if they are from a normal distribution
+# Perform Shapiro-Wilk test for normality
+shapiro_before &lt;- shapiro.test(vocab$before.training)
+shapiro_after &lt;- shapiro.test(vocab$after.training)
+
+# Print results
+print(shapiro_before)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  vocab$before.training
+## W = 0.98413, p-value = 0.9921</code></pre>
+<pre class="r"><code>print(shapiro_after)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  vocab$after.training
+## W = 0.94602, p-value = 0.5009</code></pre>
+<pre class="r"><code># Apply the appropriate statistical test to answer the research question.</code></pre>
+</div>
+</div>
+<div class="section level1">
+<h1>Interpretation</h1>
+<ol style="list-style-type: decimal;">
+<li><strong>Shapiro-Wilk Normality Test Results:</strong> Pre-Training
+Scores (W = 0.98413, p-value = 0.9921):</li>
+</ol>
+<ul>
+<li><p>The p-value is much greater than 0.05, indicating that the
+pre-training test scores are normally distributed.</p></li>
+<li><p>Post-Training Scores (W = 0.94602, p-value = 0.5009):</p></li>
+<li><p>The p-value is also greater than 0.05, indicating that the
+post-training test scores are normally distributed.</p></li>
+</ul>
+<ol start="2" style="list-style-type: decimal;">
+<li><strong>Box Plot Observations</strong></li>
+</ol>
+<ul>
+<li><p>The box plot shows that the median score increases after
+training, with the post-training group having a higher median compared
+to the pre-training group.</p></li>
+<li><p>The variability in scores (as indicated by the interquartile
+range) is similar between the two groups.</p></li>
+<li><p>There are no extreme outliers in either group.</p></li>
+</ul>
+<ol start="3" style="list-style-type: decimal;">
+<li><strong>Density Plot Observations</strong></li>
+</ol>
+<ul>
+<li><p>The density plot shows a shift in the distribution of scores
+after training, with post-training scores being centered around higher
+values compared to pre-training scores.</p></li>
+<li><p>This visual evidence suggests an improvement in test scores after
+training.</p></li>
+</ul>
+<p><strong>Does vocab training significantly improve median test
+scores?</strong></p>
+<ol style="list-style-type: decimal;">
+<li>Data pairing: The data are paired, as pre-training and post-training
+scores are from the same individuals.</li>
+</ol>
+<p>2.<strong>Statistical Testing</strong> Since both groups are normally
+distributed and paired, we can use a parametric test like the paired
+t-test to determine if there is a significant improvement in median test
+scores after training.</p>
+<p>Alternatively, we can use the Wilcoxon Signed-Rank Test for
+robustness.</p>
+<p><strong>Paired t-Test</strong></p>
+<pre class="r"><code># Apply paired t-test
+t_test &lt;- t.test(x = vocab$before.training, y = vocab$after.training,
+                 paired = TRUE, alternative = &quot;greater&quot;)
+
+# Print results
+print(t_test)</code></pre>
+<pre><code>## 
+##  Paired t-test
+## 
+## data:  vocab$before.training and vocab$after.training
+## t = -2.2958, df = 13, p-value = 0.9805
+## alternative hypothesis: true mean difference is greater than 0
+## 95 percent confidence interval:
+##  -6.83242      Inf
+## sample estimates:
+## mean difference 
+##       -3.857143</code></pre>
+<p><strong>Interpretation</strong> - Test Statistic (t = -2.2958): This
+is the calculated t-value for the paired t-test.</p>
+<ul>
+<li><p>p-value = 0.9805: The p-value is much greater than 0.05, meaning
+we fail to reject the null hypothesis.</p></li>
+<li><p>Mean Difference (-3.857143): The mean difference between
+pre-training and post-training scores is negative, indicating that
+post-training scores are slightly lower on average.</p></li>
+</ul>
+<p><strong>Wilcoxon Signed-Rank Test</strong></p>
+<pre class="r"><code># Apply Wilcoxon Signed-Rank Test (Paired Data)
+wilcox_test &lt;- wilcox.test(x = vocab$before.training, y = vocab$after.training,
+                           paired = TRUE, alternative = &quot;greater&quot;)</code></pre>
+<pre><code>## Warning in wilcox.test.default(x = vocab$before.training, y =
+## vocab$after.training, : cannot compute exact p-value with ties</code></pre>
+<pre class="r"><code># Print results
+print(wilcox_test)</code></pre>
+<pre><code>## 
+##  Wilcoxon signed rank test with continuity correction
+## 
+## data:  vocab$before.training and vocab$after.training
+## V = 24, p-value = 0.9661
+## alternative hypothesis: true location shift is greater than 0</code></pre>
+<p><strong>Interpretation</strong></p>
+<ul>
+<li><p>Test Statistic (V = 24): This is the rank sum statistic for the
+Wilcoxon Signed-Rank Test.</p></li>
+<li><p>p-value = 0.9661: The p-value is much greater than 0.05, meaning
+we fail to reject the null hypothesis.</p></li>
+<li><p>Warning: The warning indicates that there are ties in the data,
+which makes it impossible to compute an exact p-value.</p></li>
+</ul>
+</div>
+<div class="section level1">
+<h1>Conclusion</h1>
+<p>Based on the statistical tests and visualizations:</p>
+<ol style="list-style-type: decimal;">
+<li><p>Both the paired t-test and Wilcoxon Signed-Rank Test fail to
+reject the null hypothesis (<span class="math inline">\(p &gt;
+0.05\)</span>).</p></li>
+<li><p>There is no statistically significant evidence to suggest that
+vocabulary training improves test scores.</p></li>
+<li><p>Visualizations (box plot and density plot) support this
+conclusion, showing overlapping distributions and similar medians for
+pre-training and post-training scores.</p></li>
+<li><p>The paired t-test does not provide evidence that vocabulary
+training significantly improves test scores.</p></li>
+<li><p>The Wilcoxon Signed-Rank Test also does not provide evidence that
+vocabulary training significantly improves test scores.</p></li>
+</ol>
+<div class="section level2">
+<h2>Vocabulary training does not appear to significantly improve median
+test scores based on this dataset and analysis.</h2>
+</div>
+<div class="section level2">
+<h2>McDonald’s menu problem</h2>
+<p>Is there a significant difference in salt in the menu items?</p>
+<ul>
+<li>Consider the following questions and apply the appropriate
+statistical test:
+<ul>
+<li>Are they from a normal distribution?</li>
+<li>Are the data paired or unpaired?</li>
+<li>Will you use a one sided or two sided test?</li>
+<li>Which test will you use?</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Load the menu.csv data
+menu &lt;- fread(&#39;menu.csv&#39;)
+
+# View the structure of the data
+str(menu)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   260 obs. of  24 variables:
+##  $ Category                     : chr  &quot;Breakfast&quot; &quot;Breakfast&quot; &quot;Breakfast&quot; &quot;Breakfast&quot; ...
+##  $ Item                         : chr  &quot;Egg McMuffin&quot; &quot;Egg White Delight&quot; &quot;Sausage McMuffin&quot; &quot;Sausage McMuffin with Egg&quot; ...
+##  $ Serving Size                 : chr  &quot;4.8 oz (136 g)&quot; &quot;4.8 oz (135 g)&quot; &quot;3.9 oz (111 g)&quot; &quot;5.7 oz (161 g)&quot; ...
+##  $ Calories                     : int  300 250 370 450 400 430 460 520 410 470 ...
+##  $ Calories from Fat            : int  120 70 200 250 210 210 230 270 180 220 ...
+##  $ Total Fat                    : num  13 8 23 28 23 23 26 30 20 25 ...
+##  $ Total Fat (% Daily Value)    : int  20 12 35 43 35 36 40 47 32 38 ...
+##  $ Saturated Fat                : num  5 3 8 10 8 9 13 14 11 12 ...
+##  $ Saturated Fat (% Daily Value): int  25 15 42 52 42 46 65 68 56 59 ...
+##  $ Trans Fat                    : num  0 0 0 0 0 1 0 0 0 0 ...
+##  $ Cholesterol                  : int  260 25 45 285 50 300 250 250 35 35 ...
+##  $ Cholesterol (% Daily Value)  : int  87 8 15 95 16 100 83 83 11 11 ...
+##  $ Sodium                       : int  750 770 780 860 880 960 1300 1410 1300 1420 ...
+##  $ Sodium (% Daily Value)       : int  31 32 33 36 37 40 54 59 54 59 ...
+##  $ Carbohydrates                : int  31 30 29 30 30 31 38 43 36 42 ...
+##  $ Carbohydrates (% Daily Value): int  10 10 10 10 10 10 13 14 12 14 ...
+##  $ Dietary Fiber                : int  4 4 4 4 4 4 2 3 2 3 ...
+##  $ Dietary Fiber (% Daily Value): int  17 17 17 17 17 18 7 12 7 12 ...
+##  $ Sugars                       : int  3 3 2 2 2 3 3 4 3 4 ...
+##  $ Protein                      : int  17 18 14 21 21 26 19 19 20 20 ...
+##  $ Vitamin A (% Daily Value)    : int  10 6 8 15 6 15 10 15 2 6 ...
+##  $ Vitamin C (% Daily Value)    : int  0 0 0 0 0 2 8 8 8 8 ...
+##  $ Calcium (% Daily Value)      : int  25 25 25 30 25 30 15 20 15 15 ...
+##  $ Iron (% Daily Value)         : int  15 8 10 15 10 20 15 20 10 15 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code># View box plot of sodium vs the category
+boxplot(menu$Sodium ~ menu$Category,
+        main = &quot;Comparison of Sodium Content by Category&quot;,
+        col = c(&quot;lightblue&quot;, &quot;lightgreen&quot;, &quot;lightyellow&quot;, &quot;lightgray&quot;),
+        ylab = &quot;Sodium (mg)&quot;)</code></pre>
+<p><img src="javascript://" width="672"/></p>
+<pre class="r"><code># Use the Shapiro-Wilks test to see if the sodium content in each categories are from a normal distribution.
+categories &lt;- unique(menu$Category)
+for (cat in categories) {
+    sodium_data &lt;- menu[menu$Category == cat, Sodium]
+    shapiro_test &lt;- shapiro.test(sodium_data)
+    cat(&quot;Shapiro-Wilk Test for&quot;, cat, &quot;:\n&quot;)
+    print(shapiro_test)
+}</code></pre>
+<pre><code>## Shapiro-Wilk Test for Breakfast :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.96391, p-value = 0.2034
+## 
+## Shapiro-Wilk Test for Beef &amp; Pork :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.97693, p-value = 0.9442
+## 
+## Shapiro-Wilk Test for Chicken &amp; Fish :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.7828, p-value = 6.992e-05
+## 
+## Shapiro-Wilk Test for Salads :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.85788, p-value = 0.182
+## 
+## Shapiro-Wilk Test for Snacks &amp; Sides :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.82219, p-value = 0.01266
+## 
+## Shapiro-Wilk Test for Desserts :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.89622, p-value = 0.3087
+## 
+## Shapiro-Wilk Test for Beverages :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.85312, p-value = 0.001329
+## 
+## Shapiro-Wilk Test for Coffee &amp; Tea :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.95984, p-value = 0.00528
+## 
+## Shapiro-Wilk Test for Smoothies &amp; Shakes :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  sodium_data
+## W = 0.92352, p-value = 0.0424</code></pre>
+<pre class="r"><code># Apply the appropriate statistical test to answer the research question.</code></pre>
+<p><strong>Interpretation of Shapiro-Wilk Normality Test
+Results</strong></p>
+<p>The Shapiro-Wilk test checks whether the data follows a normal
+distribution. Here’s the interpretation of the results for sodium
+content across menu categories:</p>
+<ol style="list-style-type: decimal;">
+<li><p><strong>Beef &amp; Pork (W = 0.89622, p-value = 0.3087):</strong>
+The p-value is greater than 0.05, indicating that the sodium content in
+the “Beef &amp; Pork” category is normally distributed.</p></li>
+<li><p><strong>Beverages (W = 0.85312, p-value = 0.001329):</strong> The
+p-value is less than 0.05, indicating that the sodium content in the
+“Beverages” category is not normally distributed.</p></li>
+<li><p><strong>Coffee &amp; Tea (W = 0.95984, p-value =
+0.00528):</strong> The p-value is less than 0.05, indicating that the
+sodium content in the “Coffee &amp; Tea” category is not normally
+distributed.</p></li>
+<li><p><strong>Smoothies &amp; Shakes (W = 0.92352, p-value =
+0.0424):</strong> The p-value is less than 0.05, indicating that the
+sodium content in the “Smoothies &amp; Shakes” category is not normally
+distributed.</p></li>
+</ol>
+<p>Since several categories (e.g., “Beverages,” “Coffee &amp; Tea,” and
+“Smoothies &amp; Shakes”) do not follow a normal distribution (p-value
+&lt; 0.05), we cannot use parametric tests like ANOVA to compare sodium
+content across categories.</p>
+<p>Instead, we will use a non-parametric test like the Kruskal-Wallis
+H-test to determine if there are significant differences in sodium
+content among the menu categories.</p>
+</div>
+</div>
+<div class="section level1">
+<h1>Is there a significant difference in salt in the menu items?</h1>
+<p><strong>Kruskal-Wallis H-Test</strong> The Kruskal-Wallis H-test is a
+non-parametric alternative to ANOVA and can be used to compare medians
+across multiple groups when data are not normally distributed.</p>
+<pre class="r"><code># Perform Kruskal-Wallis H-test
+kruskal_test &lt;- kruskal.test(Sodium ~ Category, data = menu)
+
+# Print results
+print(kruskal_test)</code></pre>
+<pre><code>## 
+##  Kruskal-Wallis rank sum test
+## 
+## data:  Sodium by Category
+## Kruskal-Wallis chi-squared = 183.42, df = 8, p-value &lt; 2.2e-16</code></pre>
+</div>
+<div class="section level1">
+<h1>Interpretation: Test Statistic (chi-squared = 183.42):</h1>
+<p>This is the test statistic for the Kruskal-Wallis H-test, which
+measures differences in median sodium content across menu
+categories.</p>
+<ul>
+<li><p>Degrees of Freedom (df = 8):</p></li>
+<li><p>There are 9 categories in total (one less than the number of
+groups).</p></li>
+<li><p>p-value &lt; 2.2e-16:</p></li>
+<li><p>The p-value is extremely small (much less than 0.05), indicating
+that there is a statistically significant difference in sodium content
+among the menu categories.</p></li>
+</ul>
+</div>
+<div class="section level1">
+<h1><strong>Conclusion:</strong></h1>
+<p>We reject the null hypothesis, which states that all categories have
+the same median sodium content.</p>
+<p>At least one category has a significantly different median sodium
+content compared to others.</p>
+<p>The box plot provides visual evidence of variability in sodium
+content across menu categories:</p>
+<pre><code>1. Beef &amp; Pork: Relatively high median sodium content.
+
+2. Narrow interquartile range (IQR), indicating less variability in sodium levels.
+
+3. Breakfast: Higher median sodium content compared to most other categories.  Some extreme outliers with very high sodium levels.
+
+4. Coffee &amp; Tea and Smoothies &amp; Shakes: Very low sodium content with minimal variability.
+
+5. Snacks &amp; Sides and Salads: Moderate sodium levels with wider variability.</code></pre>
+<p>There are significant differences in median sodium content among
+McDonald’s menu categories (p &lt; 0.05). Categories like “Breakfast”
+and “Beef &amp; Pork” have significantly higher sodium levels,
+suggesting that customers looking to reduce their sodium intake should
+consider items from lower-sodium categories such as “Coffee &amp; Tea”
+or “Smoothies &amp; Shakes.”</p>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						document.querySelectorAll('math mmultiscripts > none').forEach(elm => {
+							const mrow = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mrow');
+							elm.replaceWith(mrow);
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							outputScale: 1.5,
+							renderLatex: false,
+							enableMML3Support: false
+						});
+					}
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/prism.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					document.querySelectorAll('.d2l-code').forEach(code => {
+						window.D2L.Prism.formatCodeElement(code);
+					});
+				});</script><script type="module" src="https://s.brightspace.com/lib/bsi/2025.8.272/unbundled/embeds.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					window.D2L.EmbedRenderer.renderEmbeds(document.body);
+				});</script></body></html>

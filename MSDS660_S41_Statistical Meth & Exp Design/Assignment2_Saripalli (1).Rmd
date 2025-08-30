@@ -1,0 +1,383 @@
+---
+title: "Assignment_WK2_plotting"
+author: "Balaram Saripalli"
+date: "`r Sys.Date()`"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question:
+Use the marketing data set from last week. Explore the relationships between at least 8 variables (if not all of them). One of the variables must be Response column.When exploring relationships you must produce at least 8 plots and at least one histogram plot, box plot, and scatter plot. 
+
+- A brief explanation of your analysis process and your interpretation of the data.
+
+-Remember, you want to know why customers responded to your marketing campaign.
+
+- What is the data, what did you do with the data, what do the results mean?
+
+- Your Rmd file and knitted html file
+
+# Solution
+
+## Load Data and Install other packages
+
+Install and load libraries. The following code will check if a package is installed, and if this is not the case it will install it.
+```{r install packages}
+if (!require(ggplot2)) {
+  install.packages('ggplot2')
+  require(ggplot2)
+}
+library(forcats)
+library(data.table)
+```
+1.  Data Context
+
+The data set marketing_data.csv consists of 2,240 customers of XYZ
+company with data on:
+
+-   Customers: ID: Customer's unique identifier
+-   Year_Birth: Customer's birth year
+-   Education: Customer's education level
+-   Marital_Status: Customer's marital status
+-   Income: Customer's yearly household income
+-   Kidhome: Number of children in customer's household
+-   Dt_Customer: Date of customer's enrollment with the company
+-   Country: Customer's location
+
+Products:
+
+-   MntWines: Amount spent on wine in the last 2 years
+-   MntFruits:Amount spent on fruits in the last 2 years
+-   MntMeatProducts: Amount spent on meat in the last 2 years
+-   MntFishProducts: Amount spent on fish in thelast 2 years
+-   MntSweetProducts: Amount spent on sweets in the last 2 years
+
+Places:
+
+-   NumWebPurchases: Number of purchases made through the company's web
+    site
+-   NumCatalogPurchases: Number of purchases made using a catalogue
+-   NumStorePurchases: Number of purchases made directly in stores
+-   NumWebVisitsMonth: Number of visits to company's web site in the
+    last month
+
+Promotion: - NumDealsPurchases: Number of purchases made with a
+discount -
+Response: 1 if customer accepted the offer in the last
+campaign, 0 otherwise
+
+## Import the data and visualize the data
+```{r data import}
+library(tidyverse)
+suppressWarnings(expr) #supresses warnings
+data <- read_csv("marketing.csv",show_col_types = FALSE)
+data<-as.data.table(data)
+head(data)
+summary(data)
+str(data)
+View(data) # Just added to visualize the data in table format
+
+# Check for missing values in the entire dataset
+missing_values <- colSums(is.na(data))
+print(missing_values)
+
+
+```
+- The given data has 2240 data points, having 19  features. 
+
+- Our data set has both numerical variables as well as categorical variable (characters)
+
+
+# Task 1
+Explore the relationships between at least 8 variables (if not all of them). One of the variables must be Response column.
+
+We need to select the variable 'Response' as a target variable and explore how oter features are related to response
+
+```{r data analysis}
+# making 'Response' column is treated as a factor
+data$Response <- as.factor(data$Response)
+```
+
+# Histograms 
+Histograms is useful to Understand the distribution of numerical features w.r.t each target class
+
+Usually histogram is useful to understand the distribution of variable, but here we are finding the relation ship w.r.t 'Response' variable. The histograms are more suitable for analysis of numerical features  here we need to group data by the target variable and overlay distributions.
+
+```{r data exploration}
+# Data exploration
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+# Clean the data to remove rows with missing values in 'Income', 'Year_Birth', or 'MntWines'
+data_clean <- data %>%
+  filter(!is.na(Income) & !is.na(Year_Birth) & !is.na(MntWines) & !is.na(Response))
+
+# Parse 'Income' to remove '$'
+data$Income <- parse_number(data$Income)
+
+# Set options to avoid scientific notation
+options(scipen = 9999)
+
+# 1. Histogram: Distribution of Year_Birth by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = Year_Birth, fill = factor(Response))) +
+  geom_histogram(binwidth = 5, alpha = 0.7, position = "dodge") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Distribution of Year of Birth by Response", x = "Year of Birth", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 2. Histogram: Distribution of Income by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = Income, fill = factor(Response))) +
+  geom_histogram(binwidth = 2000, alpha = 0.7, position = "dodge") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Distribution of Income by Response", x = "Income", y = "Count", fill = "Response") +
+  scale_x_continuous(labels = scales::comma, limits = c(0, 100000)) +  # Limit x-axis to 100,000
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# 3. Histogram: Distribution of Amount Spent on Wines by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = MntWines, fill = factor(Response))) +
+  geom_histogram(binwidth = 50, alpha = 0.7, position = "dodge") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Distribution of Amount Spent on Wines by Response", x = "Amount Spent on Wines", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 4. Histogram of total purchases by response
+data <- data %>% 
+  mutate(TotalPurchases = NumStorePurchases + NumWebPurchases + NumCatalogPurchases)
+ggplot(data, aes(x = TotalPurchases, fill = factor(Response))) +
+  geom_histogram(binwidth = 5, alpha = 0.7, position = "dodge") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Distribution of total no of purchases by Response", x = "Total no of pruchases", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 5. Histogram of total amount spent by response 
+data <- data %>% 
+  mutate(TotalAmtspent = MntWines + MntFruits + MntMeatProducts + MntFishProducts + MntSweetProducts + MntGoldProds)
+ggplot(data, aes(x = TotalAmtspent, fill = factor(Response))) +
+  geom_histogram(binwidth = 30, alpha = 0.7, position = "dodge") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Distribution of total amount spent by Response", x = "Total amount spent", y = "Count", fill = "Response") +
+  theme_minimal()
+
+```
+# Box plots
+When your target is categorical and your feature is numerical, you want to understand how the numerical feature behaves across the categories of the target.box plot can be useful, These are useful for showing the distribution of numerical values and comparing the central tendency (median) and spread (IQR) of the variable across the categories of the target.
+
+```{r Box plots}
+# 1. Boxplot: Income distribution by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = Income, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Income Distribution by Response", x = "Response", y = "Income", fill = "Response") +
+  theme_minimal()
+
+# 2. Boxplot: Year of Birth distribution by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = Year_Birth, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Year of Birth Distribution by Response", x = "Response", y = "Year of Birth", fill = "Response") +
+  theme_minimal()
+
+# 3. Boxplot: Amount spent on Sweets by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = MntSweetProducts, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Amount Spent on Sweets by Response", x = "Response", y = "Amount Spent on Sweet", fill = "Response") +
+  theme_minimal()
+
+# 4. Boxplot: Amount spent on gold products by Response (Response 1 in orange, Response 0 in blue)
+ggplot(data, aes(x = factor(Response), y = MntGoldProds, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Amount Spent on Gold products by Response", x = "Response", y = "Amount Spent on gold products", fill = "Response") +
+  theme_minimal()
+
+# 5. Boxplot: Total Amount spent by Response (Response 1 in orange, Response 0 in blue)
+data$TotalAmtspent <- data$MntWines + data$MntFruits + data$MntMeatProducts + 
+                      data$MntFishProducts + data$MntSweetProducts + data$MntGoldProds
+ggplot(data, aes(x = factor(Response), y = TotalAmtspent, fill = factor(Response))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("0" = "blue", "1" = "orange")) +
+  labs(title = "Total amount spent by Response", x = "Response", y = "Total amount spent", fill = "Response") +
+  theme_minimal()
+```
+# Barplots
+Bar Plots are useful for visualizing the frequency of categories in both the target and other categorical features. 
+```{r bar plots}
+# 1. Bar Plot of Marital Status by Response
+ggplot(data, aes(x = Marital_Status, fill = factor(Response))) +
+  geom_bar(position = "dodge", alpha = 0.7) +
+  scale_fill_manual(values = c("1" = "orange", "0" = "blue")) +  # Specify colors for Response
+  labs(title = "Marital Status by Response", x = "Marital Status", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 2. Bar plot of Education by Response
+ggplot(data, aes(x = Education, fill = factor(Response))) +
+  geom_bar(position = "dodge", alpha = 0.7) +
+  scale_fill_manual(values = c("1" = "orange", "0" = "blue")) +  # Specify colors for Response
+  labs(title = "Education status by Response", x = "Education", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 3. Bar plot of no of kids by response
+ggplot(data, aes(x = Kidhome, fill = factor(Response))) +
+  geom_bar(position = "dodge", alpha = 0.7) +
+  scale_fill_manual(values = c("1" = "orange", "0" = "blue")) +  # Specify colors for Response
+  labs(title = "no of kids by Response", x = "Kidhome", y = "Count", fill = "Response") +
+  theme_minimal()
+
+# 3. Bar plot of country by response
+ggplot(data, aes(x = Country, fill = factor(Response))) +
+  geom_bar(position = "dodge", alpha = 0.7) +
+  scale_fill_manual(values = c("1" = "orange", "0" = "blue")) +  # Specify colors for Response
+  labs(title = "Country by Response", x = "Country", y = "Count", fill = "Response") +
+  theme_minimal()
+
+```
+# Scatter plot
+A scatter plot is used to explore the relationship between two numerical variables. However,it can still be useful for the variables is categorical (like a target variable) with certain modifications. Here's when and how you can use scatter plots when one of the variables is categorical
+
+```{r Scatter plots}
+
+# 1. Scatter plot of Income Vs amount spent on meat by response
+ggplot(data, aes(x = Income, y = MntMeatProducts, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # 'jitter' adds noise to prevent overlap
+  labs(title = "Scatter Plot of Income vs. Amount Spent on Meat by Response",
+       x = "Income", y = "Amount Spent on Wines", color = "Response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "orange")) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()
+
+# 2. Scatter Plot:  Income vs total amount spent by Response
+ggplot(data, aes(x = Income, y = TotalAmtspent, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # 'jitter' adds noise to prevent overlap
+  labs(title = "Scatter Plot of Income vs. Total amount spent by Response",
+       x = "Income", y = "Total amount spent", color = "Response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "orange")) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()
+
+# 3. Scatter Plot: Income vs. Total purchases by Response
+ggplot(data, aes(x = Income, y = TotalPurchases, color = factor(Response))) +
+  geom_jitter(alpha = 0.9, size = 2, width = 0.2, height = 0.2) +  # 'jitter' adds noise to prevent overlap
+  labs(title = "Scatter Plot of Income vs. total purchases by Response",
+       x = "Income", y = "TotalPurchases", color = "Response") +
+  scale_color_manual(values = c("0" = "blue", "1" = "orange")) +  # Different colors for Response
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000,
+  theme_minimal()
+```
+```{r scatter }
+# Scatter plot of Income vs. Response (binary target)
+# Parse 'Income' to remove '$'
+#data$Income <- parse_number(data$Income)
+
+# Set options to avoid scientific notation
+options(scipen = 9999)
+
+# Scatter plot of Income vs. Response (binary target)
+ggplot(data, aes(x = Income, y = factor(Response), color = factor(Response))) +
+  geom_jitter(alpha = 0.7, size = 2, width = 0.2, height = 0.1) +  # Jitter to add some spread
+  scale_color_manual(values = c("0" = "blue", "1" = "orange")) +  # Different colors for Response = 0 and 1
+  labs(
+    title = "Scatter Plot of Income vs. Response",
+    x = "Income", y = "Response", color = "Response"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
+  scale_x_continuous(limits = c(0, 100000), labels = scales::comma) +  # Limit x-axis from 0 to 100,000, add commas
+  scale_y_discrete(limits = c("0", "1"))
+
+
+# Scatter plot of Total Amount spent vs. Response (binary target)
+ggplot(data, aes(x = TotalAmtspent, y = factor(Response), color = factor(Response))) +
+  geom_jitter(alpha = 0.7, size = 2, width = 0.2, height = 0.1) +  # Jitter to add some spread
+  scale_color_manual(values = c("0" = "blue", "1" = "orange")) +  # Different colors for Response = 0 and 1
+  labs(
+    title = "Scatter Plot of total amount spent vs. Response",
+    x = "TotalAmtspent", y = "Response", color = "Response"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
+  scale_y_discrete(limits = c("0", "1"))
+
+```
+- A brief explanation of your analysis process and your interpretation of the data.Remember, you want to know why customers responded to your marketing campaign.What is the data, what did you do with the data, what do the results mean?
+
+PLots: 
+We have plotted different type of plots, including histograms, box plots, bar plots and scatter plots
+
+The objective of current study is identifu and understand the relationship of variables w.r.t target variable 'Response'
+
+As traditionally histograms and box plots are traditionally used for univariate analyisis i,e., to check how data was distributed. we have modified slightly bu grouping the data based on response value (binary) and plotted the distributions of grouped data. 
+
+In the similar fashion the scatter plot was also plotted wrt response directly as well as scattering of each response w.r.t other two variables 
+
+In total, We plotted 18 plots including histograms, box plots, bar plots, and scatter plots. They are 
+
+1. Histogram of Distribution of Year_Birth by Response
+2. Histogram of Distribution of Income by Response 
+3. Histogram of Distribution of Amount Spent on Wines by Response
+4. Histogram of totan no of purchases by response
+5. Histogram of total amount spent by response
+6. Box plot of Income distribution by Response
+7. Box plot of year of birth by response
+7. Box plot of amount spent on sweets by response
+8. Box plot of amount spent on gold products by response
+9. Box plot of total amount spent by response
+10.Bar plot of marital status by response
+11.Bar plot of education by response
+12.Bar plot of number of kids by response
+13.Bar plot of Country by response
+14.Scatter plot of Income Vs amount spent on meat by response
+15.Scatter plot of Income Vs total amount spent by response
+16.Scatter Plot of Income vs. Total purchases by Response
+17.Scatter plot of Income vs. Response (binary target)
+18.Scatter plot of Total Amount spent vs. Response (binary target) 
+
+Interpretation and analysis of plots
+1.Most of the customers are having birth year > 1930; very few customers were befor 1930 but most of the purchases are without marketing campaign
+
+2. The incomr is almost following normal distribution without campaign, where as the data distribution of income of customers with marketing campaign is not a normal distribution and very less w.r.t customers without marketing campaign
+
+3.Most of people are spending less money on wines irrespective of marketing 
+
+4. Most of the people with out are marketing is having less total number of purchases i.e., around 5. where as with marketing most of the people are having 20 number of purchases however frequency is less.
+
+5. Very few customers are spending huge amount of money, highlighting the need for better marketing campaigns and strategies
+
+6. There is outliers in the income, very few data points are having higher income and are purchasing without camapining
+
+7. There is outliers in the year_birth as well, as there are very few custoomeres who are born before 1930
+
+8. Amount spent on Sweets increases with marketing campaign (mean shift upwards). 
+
+9. Amount spent on gold products also increases with marketing campaign (mean shift upwards)
+
+10. Total amount spent on purchase also increase with marketing 
+
+11. Most of our customers are graduated. 
+
+12. most of purchases are done by customers with no kids
+
+13. Most of customers are from spain with and with out campaign, the number of customers from 'middle east' countries is very less
+
+14. Based on the scatter plots, The amount spent on meant, total amount spent increases w.r.t income. but there is no signinficant change in trend with and without campaining
+
+15. There is proportiobnal relation ship of income with the total number of purchases. 
+
+
+Overall, the Amount spent on any of products or total amount increases when there is a campaign (the means are shiffing up), however very few people are purchasing due to campaings as the frequency of response '1' is always less that respomse '0' in our all plots, clearly stating that the marketing is not strong enogh they need to increase the marketing campaingn and strategies in order to improve. 
+
+Also most focus should be taken in the countries that has less customers and spending less amount. 
+
+
+Note: We have ignored the missing values and they are ignored while plotting the data and shown as warning. we can also remove those datapoints and do all the analysis
+
+
+- Your Rmd file and knitted html file
